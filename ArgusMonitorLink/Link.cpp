@@ -37,7 +37,7 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
     case argus_monitor::data_api::SENSOR_TYPE_CPU_FREQUENCY_FSB:
         return { "CPU", "Frequency", "CPU" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_NAME:
-        return { "GPU", "Name", "GPU" };
+        return { "GPU", "Text", "Name" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
         return { "GPU", "Load", "GPU" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_CORECLK:
@@ -111,7 +111,9 @@ void ArgusMonitorLink::parse_sensor_data()
             sensors.append(name_string);
             sensors.append("|");
 
-            sensors.append(std::to_string(sensor_data.Value));
+            std::string value = std::get<1>(types) != "Text" ? std::to_string(sensor_data.Value) : name_string;
+
+            sensors.append(value);
             sensors.append("|");
 
             sensors.append(std::get<1>(types));
