@@ -1,8 +1,9 @@
 #include "pch.h"
-#include "Link.h"
 #include "argus_monitor_data_accessor.h"
 #include "argus_monitor_data_api.h"
+#include "Link.h"
 #include <string>
+#include <tuple>
 
 std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE sensor_type, std::string name)
 {
@@ -74,8 +75,6 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 		return { "","","" };
 	}
 }
-
-ArgusMonitorLink::ArgusMonitorLink() : current_sensor_data() {}
 
 int ArgusMonitorLink::start()
 {

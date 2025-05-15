@@ -1,8 +1,8 @@
 #pragma once
-#include "argus_monitor_data_api.h"
 #include "argus_monitor_data_accessor.h"
-#include <string>
+#include "argus_monitor_data_api.h"
 #include <map>
+#include <string>
 
 class ArgusMonitorLink {
 	bool running = false;
@@ -23,9 +23,8 @@ class ArgusMonitorLink {
 		{"Battery", true},
 		{"ArgusMonitor", true}
 	};
-public:
-	ArgusMonitorLink();
 
+public:
 	int start();
 	bool check_connection();
 	int stop();
