@@ -15,6 +15,9 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_TEMPERATURE_ADDITIONAL:
 		return { "CPU", "Temperature", "Additional" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_TEMPERATURE:
+		if (name.find("Memory") != std::string::npos) {
+			return { "GPU", "Temperature", "GPU" };
+		}
 		return { "GPU", "Temperature", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_DISK_TEMPERATURE:
 		return { "Drive", "Temperature", "Drive" };
@@ -41,7 +44,7 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
 		return { "GPU", "Load", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_CORECLK:
-		return { "GPU", "Clock", "Core" };
+		return { "GPU", "Clock", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORYCLK:
 		return { "GPU", "Clock", "Memory" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_SHARERCLK:
