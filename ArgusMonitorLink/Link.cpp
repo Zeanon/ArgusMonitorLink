@@ -11,12 +11,12 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 	case argus_monitor::data_api::SENSOR_TYPE_INVALID:
 		return { "Invalid", "Invalid", "Invalid" };
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_TEMPERATURE:
-		return { "CPU", "Temperature", "CPU" };
+		return { "CPU", "Temperature", "Temperature" };
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_TEMPERATURE_ADDITIONAL:
-		return { "CPU", "Temperature", "Additional" };
+		return { "CPU", "Temperature", "Additional Temperature" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_TEMPERATURE:
 		if (name.find("Memory") != std::string::npos) {
-			return { "GPU", "Temperature", "GPU" };
+			return { "GPU", "Temperature", "Memory" };
 		}
 		return { "GPU", "Temperature", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_DISK_TEMPERATURE:
@@ -36,9 +36,9 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 	case argus_monitor::data_api::SENSOR_TYPE_NETWORK_SPEED:
 		return { "Network", "Transfer", "Network" };
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_MULTIPLIER:
-		return { "CPU", "Multiplier", "CPU" };
+		return { "CPU", "Multiplier", "Multiplier" };
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_FREQUENCY_FSB:
-		return { "CPU", "Frequency", "CPU" };
+		return { "CPU", "Frequency", "FSB" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_NAME:
 		return { "GPU", "Text", "Name" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
@@ -58,7 +58,7 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 	case argus_monitor::data_api::SENSOR_TYPE_DISK_TRANSFER_RATE:
 		return { "Drive", "Transfer", "Drive" };
 	case argus_monitor::data_api::SENSOR_TYPE_CPU_LOAD:
-		return { "CPU", "Percentage", "CPU" };
+		return { "CPU", "Percentage", "Load" };
 	case argus_monitor::data_api::SENSOR_TYPE_RAM_USAGE:
 		if (name.find("Total") != std::string::npos) {
 			return { "RAM", "Total", "RAM" };
@@ -77,18 +77,17 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 
 ArgusMonitorLink::ArgusMonitorLink() : current_sensor_data() {}
 
-int ArgusMonitorLink::start()
+void ArgusMonitorLink::start()
 {
 	auto const new_sensor_data_available = [this](argus_monitor::data_api::ArgusMonitorData const& new_sensor_data) {
 		ArgusMonitorLink::current_sensor_data = new_sensor_data;
 		};
-	ArgusMonitorLink::data_accessor_.RegisterSensorCallbackOnDataChanged(new_sensor_data_available);
 
-	return 0;
+	ArgusMonitorLink::data_accessor_.RegisterSensorCallbackOnDataChanged(new_sensor_data_available);
 }
 
-int ArgusMonitorLink::check_connection() {
-	return ArgusMonitorLink::data_accessor_.Open() ? 1 : 0;
+bool ArgusMonitorLink::check_connection() {
+	return ArgusMonitorLink::data_accessor_.Open();
 }
 
 void ArgusMonitorLink::close()
@@ -109,7 +108,7 @@ void ArgusMonitorLink::parse_sensor_data()
 		std::string name_string(name.begin(), name.end());
 		std::tuple < std::string, std::string, std::string> types = parse_types(sensor_data.SensorType, name_string);
 
-		if (ArgusMonitorLink::enabled_sensors[std::get<0>(types)] != 0)
+		if (ArgusMonitorLink::enabled_sensors[std::get<0>(types)])
 		{
 			sensors.append(name_string);
 			sensors.append("[<|>]");
@@ -147,7 +146,12 @@ void ArgusMonitorLink::get_sensor_data(char* data, int maxlen)
 	data[length] = 0;
 }
 
-void ArgusMonitorLink::set_sensor_enabled(char* name, int enabled)
+bool ArgusMonitorLink::check_data()
+{
+	return ArgusMonitorLink::current_sensor_data.Signature == 0x4D677241 && ArgusMonitorLink::current_sensor_data.TotalSensorCount > 0;
+}
+
+void ArgusMonitorLink::set_sensor_enabled(char* name, bool enabled)
 {
 	ArgusMonitorLink::enabled_sensors.at(std::string(name)) = enabled;
 }
