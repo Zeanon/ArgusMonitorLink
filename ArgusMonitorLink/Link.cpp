@@ -77,22 +77,35 @@ std::tuple<std::string, std::string, std::string> parse_types(argus_monitor::dat
 
 ArgusMonitorLink::ArgusMonitorLink() : current_sensor_data() {}
 
-void ArgusMonitorLink::start()
+int ArgusMonitorLink::start()
 {
+	if (running)
+	{
+		return 10;
+	}
+
+	running = true;
 	auto const new_sensor_data_available = [this](argus_monitor::data_api::ArgusMonitorData const& new_sensor_data) {
 		ArgusMonitorLink::current_sensor_data = new_sensor_data;
 		};
 
 	ArgusMonitorLink::data_accessor_.RegisterSensorCallbackOnDataChanged(new_sensor_data_available);
+	return 0;
 }
 
 bool ArgusMonitorLink::check_connection() {
 	return ArgusMonitorLink::data_accessor_.Open();
 }
 
-void ArgusMonitorLink::close()
+int ArgusMonitorLink::stop()
 {
+	if (!running)
+	{
+		return 10;
+	}
 	ArgusMonitorLink::data_accessor_.Close();
+	running = false;
+	return 0;
 }
 
 void ArgusMonitorLink::parse_sensor_data()

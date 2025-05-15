@@ -5,6 +5,8 @@
 #include <map>
 
 class ArgusMonitorLink {
+	bool running = false;
+
 	argus_monitor::data_api::ArgusMonitorDataAccessor data_accessor_{};
 
 	argus_monitor::data_api::ArgusMonitorData current_sensor_data;
@@ -24,9 +26,9 @@ class ArgusMonitorLink {
 public:
 	ArgusMonitorLink();
 
-	void start();
+	int start();
 	bool check_connection();
-	void close();
+	int stop();
 
 	void parse_sensor_data();
 	int get_data_length();
@@ -41,16 +43,16 @@ extern "C" _declspec(dllexport) void* Instantiate() {
 	return (void*) new ArgusMonitorLink();
 }
 
-extern "C" _declspec(dllexport) void Start(ArgusMonitorLink* t) {
-	t->start();
+extern "C" _declspec(dllexport) int Start(ArgusMonitorLink* t) {
+	return t->start();
 }
 
 extern "C" _declspec(dllexport) bool CheckConnection(ArgusMonitorLink* t) {
 	return t->check_connection();
 }
 
-extern "C" _declspec(dllexport) void Close(ArgusMonitorLink* t) {
-	t->close();
+extern "C" _declspec(dllexport) int Stop(ArgusMonitorLink* t) {
+	return t->stop();
 }
 
 extern "C" _declspec(dllexport) void ParseSensorData(ArgusMonitorLink* t) {
