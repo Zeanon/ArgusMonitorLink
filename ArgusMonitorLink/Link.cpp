@@ -150,12 +150,12 @@ int ArgusMonitorLink::get_data_length()
 	return ArgusMonitorLink::parsed_data_length;
 }
 
-void ArgusMonitorLink::get_sensor_data(char* data, int maxlen)
+void ArgusMonitorLink::get_sensor_data(char* buffer, int maxlen)
 {
 	int length = min(maxlen - 1, ArgusMonitorLink::parsed_data_length);
 
-	std::copy(ArgusMonitorLink::parsed_sensor_data, ArgusMonitorLink::parsed_sensor_data + length, data);
-	data[length] = 0;
+	std::copy(ArgusMonitorLink::parsed_sensor_data, ArgusMonitorLink::parsed_sensor_data + length, buffer);
+	buffer[length] = 0;
 }
 
 bool ArgusMonitorLink::check_data()
@@ -166,4 +166,9 @@ bool ArgusMonitorLink::check_data()
 void ArgusMonitorLink::set_sensor_enabled(char* name, bool enabled)
 {
 	ArgusMonitorLink::enabled_sensors.at(std::string(name)) = enabled;
+}
+
+bool ArgusMonitorLink::get_sensor_enabled(char* name)
+{
+	return ArgusMonitorLink::enabled_sensors.at(std::string(name));
 }

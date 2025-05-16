@@ -31,10 +31,11 @@ public:
 
 	void parse_sensor_data();
 	int get_data_length();
-	void get_sensor_data(char* data, int maxlen);
+	void get_sensor_data(char* buffer, int maxlen);
 	bool check_data();
 
 	void set_sensor_enabled(char* name, bool enabled);
+	bool get_sensor_enabled(char* name);
 };
 
 // Helper methods for constructor and other method
@@ -62,8 +63,8 @@ extern "C" _declspec(dllexport) int GetDataLength(ArgusMonitorLink* t) {
 	return t->get_data_length();
 }
 
-extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t, char* data, int maxlen) {
-	t->get_sensor_data(data, maxlen);
+extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t, char* buffer, int maxlen) {
+	t->get_sensor_data(buffer, maxlen);
 }
 
 extern "C" _declspec(dllexport) bool CheckData(ArgusMonitorLink* t) {
@@ -72,4 +73,8 @@ extern "C" _declspec(dllexport) bool CheckData(ArgusMonitorLink* t) {
 
 extern "C" _declspec(dllexport) void SetSensorEnabled(ArgusMonitorLink* t, char* name, bool enabled) {
 	t->set_sensor_enabled(name, enabled);
+}
+
+extern "C" _declspec(dllexport) bool GetSensorEnabled(ArgusMonitorLink* t, char* name) {
+	return t->get_sensor_enabled(name);
 }
