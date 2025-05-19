@@ -1,19 +1,19 @@
 #pragma once
 #include "argus_monitor_data_accessor.h"
 #include "argus_monitor_data_api.h"
+#include <list>
 #include <map>
 #include <string>
 
+
+using namespace std;
+
 class ArgusMonitorLink {
-	bool running = false;
+private:
+	argus_monitor::data_api::ArgusMonitorDataAccessor* data_accessor_ = nullptr;
+	const argus_monitor::data_api::ArgusMonitorData* current_sensor_data = nullptr;
 
-	argus_monitor::data_api::ArgusMonitorDataAccessor data_accessor_{};
-
-	argus_monitor::data_api::ArgusMonitorData current_sensor_data;
-	int parsed_data_length = 0;
-	const char* parsed_sensor_data = "";
-
-	std::map<std::string, bool> enabled_sensors = {
+	map<const string, bool> enabled_sensors = {
 		{"CPU", true},
 		{"GPU", true},
 		{"RAM", true},
@@ -23,19 +23,19 @@ class ArgusMonitorLink {
 		{"Battery", true},
 		{"ArgusMonitor", true}
 	};
-
 public:
-	int start();
-	bool check_connection();
-	int stop();
+	~ArgusMonitorLink() { close(); }
 
-	void parse_sensor_data();
-	int get_data_length();
-	void get_sensor_data(char* buffer, int maxlen);
-	bool check_data();
+	int register_callback(const DWORD polling_interval);
+	bool open() const;
+	int close();
 
-	void set_sensor_enabled(char* name, bool enabled);
-	bool get_sensor_enabled(char* name);
+	bool check_argus_signature() const;
+	int get_total_sensor_count() const;
+	void get_sensor_data(void (add)(const char* sensor[])) const;
+
+	void set_sensor_enabled(const char* type, bool enabled);
+	bool get_sensor_enabled(const char* type) const;
 };
 
 // Helper methods for constructor and other method
@@ -43,38 +43,38 @@ extern "C" _declspec(dllexport) void* Instantiate() {
 	return (void*) new ArgusMonitorLink();
 }
 
-extern "C" _declspec(dllexport) int Start(ArgusMonitorLink* t) {
-	return t->start();
+extern "C" _declspec(dllexport) int Register(ArgusMonitorLink* t, const DWORD polling_interval) {
+	return t->register_callback(polling_interval);
 }
 
-extern "C" _declspec(dllexport) bool CheckConnection(ArgusMonitorLink* t) {
-	return t->check_connection();
+extern "C" _declspec(dllexport) bool Open(ArgusMonitorLink* t) {
+	return t->open();
 }
 
-extern "C" _declspec(dllexport) int Stop(ArgusMonitorLink* t) {
-	return t->stop();
+extern "C" _declspec(dllexport) int Close(ArgusMonitorLink* t) {
+	return t->close();
 }
 
-extern "C" _declspec(dllexport) void ParseSensorData(ArgusMonitorLink* t) {
-	t->parse_sensor_data();
+extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t) {
+	return t->get_total_sensor_count();
 }
 
-extern "C" _declspec(dllexport) int GetDataLength(ArgusMonitorLink* t) {
-	return t->get_data_length();
+extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t, void (add)(const char* sensor[])) {
+	t->get_sensor_data(add);
 }
 
-extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t, char* buffer, int maxlen) {
-	t->get_sensor_data(buffer, maxlen);
+extern "C" _declspec(dllexport) bool CheckArgusSignature(ArgusMonitorLink* t) {
+	return t->check_argus_signature();
 }
 
-extern "C" _declspec(dllexport) bool CheckData(ArgusMonitorLink* t) {
-	return t->check_data();
+extern "C" _declspec(dllexport) void SetSensorEnabled(ArgusMonitorLink* t, const char* type, const bool enabled) {
+	t->set_sensor_enabled(type, enabled);
 }
 
-extern "C" _declspec(dllexport) void SetSensorEnabled(ArgusMonitorLink* t, char* name, bool enabled) {
-	t->set_sensor_enabled(name, enabled);
+extern "C" _declspec(dllexport) bool GetSensorEnabled(ArgusMonitorLink* t, const char* type) {
+	return t->get_sensor_enabled(type);
 }
 
-extern "C" _declspec(dllexport) bool GetSensorEnabled(ArgusMonitorLink* t, char* name) {
-	return t->get_sensor_enabled(name);
+extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t) {
+	t->~ArgusMonitorLink();
 }
