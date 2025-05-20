@@ -69,10 +69,10 @@ namespace argus_monitor {
 			bool CheckArgusSignature() const;
 			int  GetTotalSensorCount() const;
 			bool GetSensorData(void (process_sensor_data)(const char* sensor_name,
-				                                          const char* sensor_value,
-				                                          const char* sensor_type,
-				                                          const char* hardware_type,
-				                                          const char* sensor_group));
+			                                              const char* sensor_value,
+			                                              const char* sensor_type,
+			                                              const char* hardware_type,
+			                                              const char* sensor_group));
 
 			void SetHardwareEnabled(const string &type, const bool &enabled);
 			bool IsHardwareEnabled(const string &type) const;
@@ -125,11 +125,11 @@ extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t) {
 // add it to an external collection
 // returns true if new data was available and false if no new data was available
 extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
-	                                               void (process_sensor_data)(const char* sensor_name,
-	                                                                          const char* sensor_value,
-	                                                                          const char* sensor_type,
-	                                                                          const char* hardware_type,
-	                                                                          const char* sensor_group)) {
+                                                   void (process_sensor_data)(const char* sensor_name,
+                                                                              const char* sensor_value,
+                                                                              const char* sensor_type,
+                                                                              const char* hardware_type,
+                                                                              const char* sensor_group)) {
 	return t->GetSensorData(process_sensor_data);
 }
 
