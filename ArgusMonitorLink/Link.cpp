@@ -183,10 +183,10 @@ namespace argus_monitor {
 		// add it to an external collection
 		// returns true if new data was available and false if no new data was available
 		bool ArgusMonitorLink::GetSensorData(void (process_sensor_data)(const char* sensor_name,
-			                                                            const char* sensor_value,
-			                                                            const char* sensor_type,
-			                                                            const char* hardware_type,
-			                                                            const char* sensor_group))
+		                                                                const char* sensor_value,
+		                                                                const char* sensor_type,
+		                                                                const char* hardware_type,
+		                                                                const char* sensor_group))
 		{
 			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
 				return false;
