@@ -1,3 +1,11 @@
+/**
+Argus Monitor Data API, based on https://github.com/argotronic/argus_data_api/blob/master/argus_monitor_data_accessor.cpp
+Modified to not use multiple threads and "push" updates to a function but rather be completely poll based to save on memory and cpu
+
+Copyright (C) 2025 Zeanon
+Original License from https://github.com/argotronic/argus_data_api still applies
+**/
+
 #include "pch.h"
 #include "argus_monitor_data_api.h"
 #include "Link.h"
@@ -10,6 +18,7 @@
 
 using namespace std;
 
+// parse ARGUS_MONITOR_SENSOR_TYPE and name to usable values
 // return: <HardwareType, SensorType, Group>
 static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE sensor_type, string name)
 {
@@ -94,43 +103,54 @@ static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SE
 namespace argus_monitor {
 	namespace data_api {
 		// Open the connection to Argus Monitor
-		bool ArgusMonitorLink::Open()
+		// return:
+		//  0: connection is open
+		//  1: could not open file mapping
+		// 10: could not optain fileview
+		int ArgusMonitorLink::Open()
 		{
 			if (is_open_) {
-				return true;
+				return 0;
 			}
-			handle_file_mapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
-				FALSE,                                       // do not inherit the name
-				argus_monitor::data_api::kMappingName());    // name of mapping object
 
-			if (handle_file_mapping == nullptr) {
-				return false;
+			int success{ 0 };
+			handle_file_mapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
+				                                   FALSE,                                      // do not inherit the name
+				                                   argus_monitor::data_api::kMappingName());   // name of mapping object
+
+			if (nullptr == handle_file_mapping) {
+				return 1;
 			}
 
 			pointer_to_mapped_data = MapViewOfFile(handle_file_mapping,               // handle to map object
-				FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
-				0, 0, argus_monitor::data_api::kMappingSize());
+                                                   FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
+                                                   0, 0, argus_monitor::data_api::kMappingSize());
 
-			if (pointer_to_mapped_data == nullptr) {
+			if (nullptr == pointer_to_mapped_data) {
 				CloseHandle(handle_file_mapping);
-				return false;
+				return 10;
 			}
 
-			sensor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(pointer_to_mapped_data);
-			last_cycle_counter = sensor_data->CycleCounter;
+			argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(pointer_to_mapped_data);
+			last_cycle_counter = 0;
 
 			is_open_ = true;
 
-			return true;
+			return 0;
 		}
 
-		// Close the connection with Argus Monitor and clean up the stored data
+		// Clean up the file handle and unmap the fileview
+		// return:
+		//  0: successfully unmaped the fileview and closed the handle
+		//  1: Could not unmap the fileview
+		// 10: Could not close the handle
+		// 11: Neither was possible
 		int ArgusMonitorLink::Close()
 		{
 			is_open_ = false;
 
 			int success{ 0 };
-			sensor_data = nullptr;
+			argus_monitor_data = nullptr;
 			if (pointer_to_mapped_data) {
 				success += UnmapViewOfFile(pointer_to_mapped_data) == 0 ? 1 : 0;
 				pointer_to_mapped_data = nullptr;
@@ -145,66 +165,76 @@ namespace argus_monitor {
 		// Check whether ArgusMonitor is active
 		bool ArgusMonitorLink::CheckArgusSignature() const
 		{
-			if (nullptr == ArgusMonitorLink::OpenArgusApiMutex() || nullptr == sensor_data) {
+			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) {
 				return false;
 			}
-			return sensor_data->Signature == 0x4D677241;
+			return argus_monitor_data->Signature == 0x4D677241;
 		}
 
+		// Get the total amount of sensors provided by Argus Monitor
 		int ArgusMonitorLink::GetTotalSensorCount() const
 		{
-			if (nullptr == ArgusMonitorLink::OpenArgusApiMutex() || nullptr == sensor_data) {
+			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) {
 				return 0;
 			}
-			return sensor_data->TotalSensorCount;
+			return argus_monitor_data->TotalSensorCount;
 		}
 
-		void ArgusMonitorLink::GetSensorData(void (add)(const char* sensor[]))
+		// Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
+		// add it to an external collection
+		// returns true if new data was available and false if no new data was available
+		bool ArgusMonitorLink::GetSensorData(void (add)(const char* sensor[]))
 		{
-			if (nullptr == sensor_data) {
-				return;
+			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
+				return false;
 			}
 
 			HANDLE mutex_handle = ArgusMonitorLink::OpenArgusApiMutex();
 			if (nullptr == mutex_handle) {
-				return;
+				return false;
 			}
 
 			{
 				Lock scoped_lock(mutex_handle);
-				if (last_cycle_counter != sensor_data->CycleCounter)
+				// Check if new data is available
+				if (last_cycle_counter == argus_monitor_data->CycleCounter)
 				{
-					last_cycle_counter = sensor_data->CycleCounter;
-					for (size_t index{}; index < sensor_data->TotalSensorCount; ++index)
-					{
-						const wstring label(sensor_data->SensorData[index].Label);
-						const string name(label.begin(), label.end());
-						const auto types = parse_types(sensor_data->SensorData[index].SensorType, name);
+					return false;
+				}
+				last_cycle_counter = argus_monitor_data->CycleCounter;
+				for (size_t index{}; index < argus_monitor_data->TotalSensorCount; ++index)
+				{
+					const wstring label(argus_monitor_data->SensorData[index].Label);
+					const string name(label.begin(), label.end());
+					const auto types = parse_types(argus_monitor_data->SensorData[index].SensorType, name);
 
-						if (enabled_sensors.at(types[0]))
-						{
-							//Sensor: <Name, Value, SensorType, HarwareType, Group>
-							const auto value = types[1] != "Text" ? to_string(sensor_data->SensorData[index].Value) : name;
-							const char* sensor[] = {
-								name.c_str(),
-								value.c_str(),
-								types[1],
-								types[0],
-								types[2]
-							};
-							add(sensor);
-						}
+					if (enabled_sensors.at(types[0]))
+					{
+						//Sensor: <Name, Value, SensorType, HarwareType, Group>
+						const auto value = types[1] != "Text" ? to_string(argus_monitor_data->SensorData[index].Value) : name;
+						const char* sensor[] = {
+							name.c_str(),
+							value.c_str(),
+							types[1],
+							types[0],
+							types[2]
+						};
+						add(sensor);
 					}
 				}
+				return true;
 			}
+			return false;
 		}
 
-		void ArgusMonitorLink::set_sensor_enabled(const char* type, const bool enabled)
+		// Set the given hardware type to enabled/disabled
+		void ArgusMonitorLink::set_hardware_enabled(const char* type, const bool enabled)
 		{
 			enabled_sensors[type] = enabled;
 		}
 
-		bool ArgusMonitorLink::get_sensor_enabled(const char* type) const
+		// Check whether the given hardware type is enabled
+		bool ArgusMonitorLink::get_hardware_enabled(const char* type) const
 		{
 			try
 			{

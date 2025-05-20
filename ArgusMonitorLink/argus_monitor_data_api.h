@@ -1,3 +1,11 @@
+/**
+Argus Monitor Data API, based on https://github.com/argotronic/argus_data_api/blob/master/argus_monitor_data_api.h
+Modified to not use multiple threads and "push" updates to a function but rather be completely poll based to save on memory and cpu
+
+Copyright (C) 2025 Zeanon
+Original License from https://github.com/argotronic/argus_data_api still applies
+**/
+
 #ifndef ARGUS_MONITOR_DATA_MEMORY_API_H
 #define ARGUS_MONITOR_DATA_MEMORY_API_H
 
@@ -16,18 +24,18 @@ namespace argus_monitor {
 
 		enum ARGUS_MONITOR_SENSOR_TYPE {
 			SENSOR_TYPE_INVALID = 0,
-			SENSOR_TYPE_TEMPERATURE,              // temperatures of mainboard sensors, external fan controllers and AIOs
-			SENSOR_TYPE_SYNTHETIC_TEMPERATURE,    // user defined synthetic temperatures (mean, max, average, difference, ...)
-			SENSOR_TYPE_FAN_SPEED_RPM,    // fan speed of fans attached to mainboard channels, AIOs, external fan controllers and also pump speeds of AIOs
+			SENSOR_TYPE_TEMPERATURE,                   // temperatures of mainboard sensors, external fan controllers and AIOs
+			SENSOR_TYPE_SYNTHETIC_TEMPERATURE,         // user defined synthetic temperatures (mean, max, average, difference, ...)
+			SENSOR_TYPE_FAN_SPEED_RPM,                 // fan speed of fans attached to mainboard channels, AIOs, external fan controllers and also pump speeds of AIOs
 			SENSOR_TYPE_FAN_CONTROL_VALUE,             // if any fan/pump is controlled by Argus Monitor, then the control value can be read from this
 			SENSOR_TYPE_NETWORK_SPEED,                 // up/down speeds of network adapters if selected to be monitored inside Argus Monitor
 			SENSOR_TYPE_CPU_TEMPERATURE,               // the normal CPU temperature readings, per core for Intel and the only one available for AMD
 			SENSOR_TYPE_CPU_TEMPERATURE_ADDITIONAL,    // additional temperatures provided by the CPU, like CCDx temperatures of AMD CPUs
-			SENSOR_TYPE_CPU_MULTIPLIER,       // multiplier value for every core (inside the CPU, those values are changed MUCH faster than the sampling
-			// frequency)
-			SENSOR_TYPE_CPU_FREQUENCY_FSB,    // core frequencies can be calculated by multiplying FSB frequency by the multipliers
+			SENSOR_TYPE_CPU_MULTIPLIER,                // multiplier value for every core (inside the CPU, those values are changed MUCH faster than the sampling
+			                                           // frequency)
+			SENSOR_TYPE_CPU_FREQUENCY_FSB,             // core frequencies can be calculated by multiplying FSB frequency by the multipliers
 			SENSOR_TYPE_GPU_TEMPERATURE,
-			SENSOR_TYPE_GPU_NAME,    // the name of the GPU (e.g. "Nvidia RTX3080")
+			SENSOR_TYPE_GPU_NAME,                      // the name of the GPU (e.g. "Nvidia RTX3080")
 			SENSOR_TYPE_GPU_LOAD,
 			SENSOR_TYPE_GPU_CORECLK,
 			SENSOR_TYPE_GPU_MEMORYCLK,

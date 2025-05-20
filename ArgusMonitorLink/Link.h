@@ -1,3 +1,11 @@
+/**
+Argus Monitor Data API, based on https://github.com/argotronic/argus_data_api/blob/master/argus_monitor_data_accessor.h
+Modified to not use multiple threads and "push" updates to a function but rather be completely poll based to save on memory and cpu
+
+Copyright (C) 2025 Zeanon
+Original License from https://github.com/argotronic/argus_data_api still applies
+**/
+
 #pragma once
 #include "argus_monitor_data_api.h"
 #include <list>
@@ -30,7 +38,7 @@ namespace argus_monitor {
 			void*                                            pointer_to_mapped_data{ nullptr };
 			bool                                             is_open_{ false };
 			uint32_t                                         last_cycle_counter{ 0 };
-			const argus_monitor::data_api::ArgusMonitorData* sensor_data{ nullptr };
+			const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data{ nullptr };
 
 			map<const string, bool> enabled_sensors = {
 				{"CPU", true},
@@ -47,64 +55,83 @@ namespace argus_monitor {
 		public:
 			ArgusMonitorLink() = default;
 
-			ArgusMonitorLink(ArgusMonitorLink const&) = delete;
-			ArgusMonitorLink(ArgusMonitorLink&&) = delete;
+			ArgusMonitorLink(ArgusMonitorLink const&)            = delete;
+			ArgusMonitorLink(ArgusMonitorLink&&)                 = delete;
 			ArgusMonitorLink& operator=(ArgusMonitorLink const&) = delete;
-			ArgusMonitorLink& operator=(ArgusMonitorLink&&) = delete;
+			ArgusMonitorLink& operator=(ArgusMonitorLink&&)      = delete;
 
 			~ArgusMonitorLink() { Close(); }
 
-			bool Open();
+			int  Open();
 			bool IsOpen() const noexcept { return is_open_; }
 			int  Close();
 
 			bool CheckArgusSignature() const;
 			int  GetTotalSensorCount() const;
-			void GetSensorData(void (add)(const char* sensor[]));
+			bool GetSensorData(void (add)(const char* sensor[]));
 
-			void set_sensor_enabled(const char* type, bool enabled);
-			bool get_sensor_enabled(const char* type) const;
+			void set_hardware_enabled(const char* type, bool enabled);
+			bool get_hardware_enabled(const char* type) const;
 		};
 	}
 }
 
 using namespace argus_monitor::data_api;
 
-// Helper methods for constructor and other method
+// Create an instance of ArgusMonitorLink
 extern "C" _declspec(dllexport) void* Instantiate() {
 	return (void*) new ArgusMonitorLink();
 }
 
-extern "C" _declspec(dllexport) bool Open(ArgusMonitorLink* t) {
+// Open the connection to Argus Monitor
+// return:
+//  0: connection is open
+//  1: could not open file mapping
+// 10: could not optain fileview
+extern "C" _declspec(dllexport) int Open(ArgusMonitorLink* t) {
 	return t->Open();
 }
 
+// Check whether the connection is already open
 extern "C" _declspec(dllexport) bool IsOpen(ArgusMonitorLink* t) {
 	return t->IsOpen();
 }
 
+// Clean up the file handle and unmap the fileview
+// return:
+//  0: successfully unmaped the fileview and closed the handle
+//  1: Could not unmap the fileview
+// 10: Could not close the handle
+// 11: Neither was possible
 extern "C" _declspec(dllexport) int Close(ArgusMonitorLink* t) {
 	return t->Close();
 }
 
-extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t) {
-	return t->GetTotalSensorCount();
-}
-
-extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t, void (add)(const char* sensor[])) {
-	t->GetSensorData(add);
-}
-
+// Check whether ArgusMonitor is active
 extern "C" _declspec(dllexport) bool CheckArgusSignature(ArgusMonitorLink* t) {
 	return t->CheckArgusSignature();
 }
 
-extern "C" _declspec(dllexport) void SetSensorEnabled(ArgusMonitorLink* t, const char* type, const bool enabled) {
-	t->set_sensor_enabled(type, enabled);
+// Get the total amount of sensors provided by Argus Monitor
+extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t) {
+	return t->GetTotalSensorCount();
 }
 
-extern "C" _declspec(dllexport) bool GetSensorEnabled(ArgusMonitorLink* t, const char* type) {
-	return t->get_sensor_enabled(type);
+// Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
+// add it to an external collection
+// returns true if new data was available and false if no new data was available
+extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t, void (add)(const char* sensor[])) {
+	return t->GetSensorData(add);
+}
+
+// Set the given hardware type to enabled/disabled
+extern "C" _declspec(dllexport) void SetHardwareEnabled(ArgusMonitorLink* t, const char* type, const bool enabled) {
+	t->set_hardware_enabled(type, enabled);
+}
+
+// Check whether the given hardware type is enabled
+extern "C" _declspec(dllexport) bool GetHardwareEnabled(ArgusMonitorLink* t, const char* type) {
+	return t->get_hardware_enabled(type);
 }
 
 extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t) {
