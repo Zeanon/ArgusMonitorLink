@@ -49,11 +49,11 @@ static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SE
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
 		return { "GPU", "Load", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_CORECLK:
-		return { "GPU", "Clock", "GPU" };
+		return { "GPU", "Frequency", "GPU" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORYCLK:
-		return { "GPU", "Clock", "Memory" };
+		return { "GPU", "Frequency", "Memory" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_SHARERCLK:
-		return { "GPU", "Clock", "Share" };
+		return { "GPU", "Frequency", "Share" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORY_USED_PERCENT:
 		return { "GPU", "Percentage", "Memory" };
 	case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORY_USED_MB:
@@ -89,14 +89,13 @@ static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SE
 		return { "Battery", "Percentage", "Battery" };
 
 	case argus_monitor::data_api::SENSOR_TYPE_SYNTHETIC_TEMPERATURE:
-		return { "ArgusMonitor", "Temperature", "Synthetic" };
+		return { "ArgusMonitor", "Temperature", "Synthetic Temperatures" };
+	case argus_monitor::data_api::SENSOR_TYPE_MAX_SENSORS:
+		return { "ArgusMonitor", "Numeric", "Sensors" };
 
 	case argus_monitor::data_api::SENSOR_TYPE_INVALID:
-		return { "Invalid", "Invalid", "Invalid" };
-
-	case argus_monitor::data_api::SENSOR_TYPE_MAX_SENSORS:
 	default:
-		return { "","","" };
+		return { "Invalid", "Invalid", "Invalid" };
 	}
 }
 
