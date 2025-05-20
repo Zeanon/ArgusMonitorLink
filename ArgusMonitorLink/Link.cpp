@@ -20,7 +20,7 @@ using namespace std;
 
 // parse ARGUS_MONITOR_SENSOR_TYPE and name to usable values
 // return: <HardwareType, SensorType, Group>
-static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE sensor_type, string name)
+static vector<const char*> parse_types(const argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const string& name)
 {
 	switch (sensor_type)
 	{
@@ -89,7 +89,7 @@ static vector<const char*> parse_types(argus_monitor::data_api::ARGUS_MONITOR_SE
 		return { "Battery", "Percentage", "Battery" };
 
 	case argus_monitor::data_api::SENSOR_TYPE_SYNTHETIC_TEMPERATURE:
-		return { "ArgusMonitor", "Temperature", "Synthetic Temperatures" };
+		return { "ArgusMonitor", "Temperature", "Synthetic Temperature" };
 	case argus_monitor::data_api::SENSOR_TYPE_MAX_SENSORS:
 		return { "ArgusMonitor", "Numeric", "Sensors" };
 
@@ -207,7 +207,7 @@ namespace argus_monitor {
 					const string name(label.begin(), label.end());
 					const auto types = parse_types(argus_monitor_data->SensorData[index].SensorType, name);
 
-					if (enabled_sensors.at(types[0]))
+					if (enabled_hardware.at(types[0]))
 					{
 						//Sensor: <Name, Value, SensorType, HarwareType, Group>
 						const auto value = types[1] != "Text" ? to_string(argus_monitor_data->SensorData[index].Value) : name;
@@ -216,7 +216,7 @@ namespace argus_monitor {
 							value.c_str(),
 							types[1],
 							types[0],
-							types[2]
+							types[2],
 						};
 						add(sensor);
 					}
@@ -229,7 +229,7 @@ namespace argus_monitor {
 		// Set the given hardware type to enabled/disabled
 		void ArgusMonitorLink::set_hardware_enabled(const char* type, const bool enabled)
 		{
-			enabled_sensors[type] = enabled;
+			enabled_hardware[type] = enabled;
 		}
 
 		// Check whether the given hardware type is enabled
@@ -237,7 +237,7 @@ namespace argus_monitor {
 		{
 			try
 			{
-				return enabled_sensors.at(type);
+				return enabled_hardware.at(type);
 			}
 			catch (const out_of_range& e)
 			{

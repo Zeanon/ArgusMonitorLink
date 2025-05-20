@@ -40,7 +40,7 @@ namespace argus_monitor {
 			uint32_t                                         last_cycle_counter{ 0 };
 			const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data{ nullptr };
 
-			map<const string, bool> enabled_sensors = {
+			map<const string, bool> enabled_hardware = {
 				{"CPU", true},
 				{"GPU", true},
 				{"RAM", true},
