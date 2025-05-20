@@ -1,5 +1,5 @@
-// pch.cpp: Quelldatei, die dem vorkompilierten Header entspricht
+// pch.cpp: source file corresponding to the pre-compiled header
 
 #include "pch.h"
 
-// Bei der Verwendung vorkompilierter Header ist diese Quelldatei für eine erfolgreiche Kompilierung erforderlich.
+// When you are using pre-compiled headers, this source file is necessary for compilation to succeed.
