@@ -20,7 +20,7 @@ using namespace std;
 
 // parse ARGUS_MONITOR_SENSOR_TYPE and name to usable values
 // return: <HardwareType, SensorType, Group>
-static vector<const char*> parse_types(const argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const string& name)
+static vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const string& name)
 {
 	switch (sensor_type)
 	{
@@ -182,7 +182,11 @@ namespace argus_monitor {
 		// Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
 		// add it to an external collection
 		// returns true if new data was available and false if no new data was available
-		bool ArgusMonitorLink::GetSensorData(void (add)(const char* sensor[]))
+		bool ArgusMonitorLink::GetSensorData(void (process_sensor_data)(const char* sensor_name,
+			                                                            const char* sensor_value,
+			                                                            const char* sensor_type,
+			                                                            const char* hardware_type,
+			                                                            const char* sensor_group))
 		{
 			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
 				return false;
@@ -192,6 +196,7 @@ namespace argus_monitor {
 			if (nullptr == mutex_handle) {
 				return false;
 			}
+
 
 			{
 				Lock scoped_lock(mutex_handle);
@@ -205,20 +210,13 @@ namespace argus_monitor {
 				{
 					const wstring label(argus_monitor_data->SensorData[index].Label);
 					const string name(label.begin(), label.end());
-					const auto types = parse_types(argus_monitor_data->SensorData[index].SensorType, name);
+					const auto types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
 
-					if (enabled_hardware.at(types[0]))
+					if (IsHardwareEnabled(types[0]))
 					{
 						//Sensor: <Name, Value, SensorType, HarwareType, Group>
 						const auto value = types[1] != "Text" ? to_string(argus_monitor_data->SensorData[index].Value) : name;
-						const char* sensor[] = {
-							name.c_str(),
-							value.c_str(),
-							types[1],
-							types[0],
-							types[2],
-						};
-						add(sensor);
+						process_sensor_data(name.c_str(), value.c_str(), types[1], types[0], types[2]);
 					}
 				}
 				return true;
@@ -227,13 +225,13 @@ namespace argus_monitor {
 		}
 
 		// Set the given hardware type to enabled/disabled
-		void ArgusMonitorLink::set_hardware_enabled(const char* type, const bool enabled)
+		void ArgusMonitorLink::SetHardwareEnabled(const string &type, const bool &enabled)
 		{
 			enabled_hardware[type] = enabled;
 		}
 
 		// Check whether the given hardware type is enabled
-		bool ArgusMonitorLink::get_hardware_enabled(const char* type) const
+		bool ArgusMonitorLink::IsHardwareEnabled(const string &type) const
 		{
 			try
 			{

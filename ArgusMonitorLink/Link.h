@@ -23,7 +23,7 @@ namespace argus_monitor {
 				HANDLE mutex_handle_;
 
 			public:
-				explicit Lock(HANDLE mutex_handle)
+				explicit Lock(HANDLE &mutex_handle)
 					: mutex_handle_{ mutex_handle }
 				{
 					WaitForSingleObject(mutex_handle_, INFINITE);
@@ -68,10 +68,14 @@ namespace argus_monitor {
 
 			bool CheckArgusSignature() const;
 			int  GetTotalSensorCount() const;
-			bool GetSensorData(void (add)(const char* sensor[]));
+			bool GetSensorData(void (process_sensor_data)(const char* sensor_name,
+				                                          const char* sensor_value,
+				                                          const char* sensor_type,
+				                                          const char* hardware_type,
+				                                          const char* sensor_group));
 
-			void set_hardware_enabled(const char* type, bool enabled);
-			bool get_hardware_enabled(const char* type) const;
+			void SetHardwareEnabled(const string &type, const bool &enabled);
+			bool IsHardwareEnabled(const string &type) const;
 		};
 	}
 }
@@ -120,18 +124,23 @@ extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t) {
 // Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
 // add it to an external collection
 // returns true if new data was available and false if no new data was available
-extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t, void (add)(const char* sensor[])) {
-	return t->GetSensorData(add);
+extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
+	                                               void (process_sensor_data)(const char* sensor_name,
+	                                                                          const char* sensor_value,
+	                                                                          const char* sensor_type,
+	                                                                          const char* hardware_type,
+	                                                                          const char* sensor_group)) {
+	return t->GetSensorData(process_sensor_data);
 }
 
 // Set the given hardware type to enabled/disabled
 extern "C" _declspec(dllexport) void SetHardwareEnabled(ArgusMonitorLink* t, const char* type, const bool enabled) {
-	t->set_hardware_enabled(type, enabled);
+	t->SetHardwareEnabled(type, enabled);
 }
 
 // Check whether the given hardware type is enabled
-extern "C" _declspec(dllexport) bool GetHardwareEnabled(ArgusMonitorLink* t, const char* type) {
-	return t->get_hardware_enabled(type);
+extern "C" _declspec(dllexport) bool IsHardwareEnabled(ArgusMonitorLink* t, const char* type) {
+	return t->IsHardwareEnabled(type);
 }
 
 extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t) {
