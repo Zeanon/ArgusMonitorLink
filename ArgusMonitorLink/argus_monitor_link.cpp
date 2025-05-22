@@ -99,7 +99,9 @@ namespace argus_monitor {
 		                                                                const char* sensor_value,
 		                                                                const char* sensor_type,
 		                                                                const char* hardware_type,
-		                                                                const char* sensor_group))
+		                                                                const char* sensor_group,
+		                                                                const char* data_index,
+		                                                                const char* sensor_index))
 		{
 			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
 				return false;
@@ -122,26 +124,29 @@ namespace argus_monitor {
 
 				if (IsHardwareEnabled("ArgusMonitor"))
 				{
-					process_sensor_data("Argus Monitor Version", (to_string(argus_monitor_data->ArgusMajor) + "." + to_string(argus_monitor_data->ArgusMinorA) + "." + to_string(argus_monitor_data->ArgusMinorB)).c_str(), "Text", "ArgusMonitor", "Argus Monitor");
-					process_sensor_data("Argus Monitor Build", to_string(argus_monitor_data->ArgusBuild).c_str(), "Text", "ArgusMonitor", "Argus Monitor");
-					process_sensor_data("Argus Data API Version", to_string(argus_monitor_data->Version).c_str(), "Text", "ArgusMonitor", "Argus Monitor");
-					process_sensor_data("Available Sensors", to_string(argus_monitor_data->TotalSensorCount).c_str(), "Text", "ArgusMonitor", "Argus Monitor");
+					process_sensor_data("Argus Monitor Version", (to_string(argus_monitor_data->ArgusMajor) + "." + to_string(argus_monitor_data->ArgusMinorA) + "." + to_string(argus_monitor_data->ArgusMinorB)).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
+					process_sensor_data("Argus Monitor Build", to_string(argus_monitor_data->ArgusBuild).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
+					process_sensor_data("Argus Data API Version", to_string(argus_monitor_data->Version).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
+					process_sensor_data("ArgusMonitorLink Version", "1.2.0.0", "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
+					process_sensor_data("Available Sensors", to_string(argus_monitor_data->TotalSensorCount).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
 				}
 
 				for (size_t index{}; index < argus_monitor_data->TotalSensorCount; ++index)
 				{
 					const wstring label(argus_monitor_data->SensorData[index].Label);
-					const string name(label.begin(), label.end());
+					string name(label.begin(), label.end());
 					const auto types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
 
 					if (IsHardwareEnabled(types[0]))
 					{
 						//Sensor: <Name, Value, SensorType, HarwareType, Group>
-						process_sensor_data(types[1] != "Text" ? name.c_str() : types[2],
-							                (types[1] == "Text" ? name : to_string(argus_monitor_data->SensorData[index].Value)).c_str(),
+						process_sensor_data("Text" == types[1] ? types[2] : name.c_str(),
+							                ("Text" == types[1] ? name : to_string(argus_monitor_data->SensorData[index].Value)).c_str(),
 							                types[1],
 							                types[0],
-							                types[2]);
+							                types[2],
+							                to_string(argus_monitor_data->SensorData[index].DataIndex).c_str(),
+							                to_string(argus_monitor_data->SensorData[index].SensorIndex).c_str());
 					}
 				}
 				return true;
@@ -170,9 +175,9 @@ namespace argus_monitor {
 					return false;
 				}
 
-				double fsb = 0;
-				vector<double> cpu_temps;
-				map<string, double> multipliers;
+				map<uint32_t, double> fsb;
+				map<uint32_t, vector<double>> cpu_temps;
+				map<uint32_t, map<string, double>> multipliers;
 
 				last_cycle_counter = argus_monitor_data->CycleCounter;
 
@@ -182,60 +187,78 @@ namespace argus_monitor {
 					const string name(label.begin(), label.end());
 					const vector<const char*> types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
 
-					if (IsHardwareEnabled(types[0]) && types[1] != "Text")
+					if (IsHardwareEnabled(types[0]) && "Text" != types[1])
 					{
 						const auto value = get_double_value(argus_monitor_data->SensorData[index].Value, types[1]);
 						if ("CPU" == types[0])
 						{
+							const auto id = argus_monitor_data->SensorData[index].SensorIndex;
 							if ("Temperature" == types[1] && "Temperature" == types[2])
 							{
-								cpu_temps.push_back(value);
+								cpu_temps[argus_monitor_data->SensorData[index].SensorIndex].push_back(value);
 							}
 
 							if ("Multiplier" == types[1] && "Multiplier" == types[2])
 							{
-								multipliers[core_clock_id(types[0], name)] = value;
+								multipliers[argus_monitor_data->SensorData[index].SensorIndex]
+									[core_clock_id(types[0],
+								                   name,
+										           argus_monitor_data->SensorData[index].SensorIndex,
+								                   argus_monitor_data->SensorData[index].DataIndex)] = value;
 							}
 
 							if ("Frequency" == types[1] && "FSB" == types[2])
 							{
-								fsb = value;
+								fsb[argus_monitor_data->SensorData[index].SensorIndex] = value;
 							}
 						}
 
-						update(sensor_id(types[0], types[1], types[2], name).c_str(), to_string(value).c_str());
+						update(sensor_id(types[0],
+						                 types[1],
+						                 types[2],
+						                 name,
+						                 argus_monitor_data->SensorData[index].SensorIndex,
+							             argus_monitor_data->SensorData[index].DataIndex).c_str(),
+						       to_string(value).c_str());
 					}
 				}
 
-				if (0 != fsb && multipliers.size() > 0)
+				if (!fsb.empty() && !multipliers.empty())
 				{
-					double max_multiplier = 0;
-					double min_multiplier = 9999;
-					double sum_multiplier = 0;
-					for (const auto& multiplier : multipliers)
+					for (const auto &fsb_pair : fsb)
 					{
-						max_multiplier = max(max_multiplier, multiplier.second);
-						min_multiplier = min(min_multiplier, multiplier.second);
-						sum_multiplier += multiplier.second;
-						update(multiplier.first.c_str(), to_string(multiplier.second * fsb).c_str());
-					}
-					const double average_multiplier = sum_multiplier / multipliers.size();
+						const auto id = to_string(fsb_pair.first);
+						double max_multiplier = 0;
+						double min_multiplier = 9999;
+						double sum_multiplier = 0;
+						for (const auto& multiplier : multipliers[fsb_pair.first])
+						{
+							max_multiplier = max(max_multiplier, multiplier.second);
+							min_multiplier = min(min_multiplier, multiplier.second);
+							sum_multiplier += multiplier.second;
+							update(multiplier.first.c_str(), to_string(multiplier.second * fsb_pair.second).c_str());
+						}
+						const double average_multiplier = sum_multiplier / multipliers[fsb_pair.first].size();
 
-					update("CPU_Multiplier_Multiplier_Max", to_string(max_multiplier).c_str());
-					update("CPU_Frequency_Core_Clock_Max", to_string(max_multiplier * fsb).c_str());
-					update("CPU_Multiplier_Multiplier_Average", to_string(average_multiplier).c_str());
-					update("CPU_Frequency_Core_Clock_Average", to_string(average_multiplier * fsb).c_str());
-					update("CPU_Multiplier_Multiplier_Min", to_string(min_multiplier).c_str());
-					update("CPU_Frequency_Core_Clock_Min", to_string(min_multiplier * fsb).c_str());
+						update(("CPU_Multiplier_Multiplier_Max_" + id).c_str(), to_string(max_multiplier).c_str());
+						update(("CPU_Frequency_Core_Clock_Max_" + id).c_str(), to_string(max_multiplier * fsb_pair.second).c_str());
+						update(("CPU_Multiplier_Multiplier_Average_" + id).c_str(), to_string(average_multiplier).c_str());
+						update(("CPU_Frequency_Core_Clock_Average_" + id).c_str(), to_string(average_multiplier * fsb_pair.second).c_str());
+						update(("CPU_Multiplier_Multiplier_Min_" + id).c_str(), to_string(min_multiplier).c_str());
+						update(("CPU_Frequency_Core_Clock_Min_" + id).c_str(), to_string(min_multiplier * fsb_pair.second).c_str());
+					}
 				}
 
 				if (!cpu_temps.empty())
 				{
-					const auto values = min_max_average(cpu_temps);
-
-					update("CPU_Temperature_Temperature_Max", to_string(values[1]).c_str());
-					update("CPU_Temperature_Temperature_Average", to_string(values[2]).c_str());
-					update("CPU_Temperature_Temperature_Min", to_string(values[0]).c_str());
+					for (const auto& cpu_temp : cpu_temps)
+					{
+						const auto values = min_max_average(cpu_temp.second);
+						const auto id = to_string(cpu_temp.first);
+						update(("CPU_Temperature_Temperature_Max_" + id).c_str(), to_string(values[1]).c_str());
+						update(("CPU_Temperature_Temperature_Average_" + id).c_str(), to_string(values[2]).c_str());
+						update(("CPU_Temperature_Temperature_Min_" + id).c_str(), to_string(values[0]).c_str());
+					}
 				}
 				return true;
 			}

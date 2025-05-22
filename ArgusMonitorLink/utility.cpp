@@ -91,14 +91,14 @@ const double get_double_value(const double& value, const string& sensor_type)
 	return value;
 }
 
-const string core_clock_id(const string& hardware_type, const string& sensor_name)
+const string core_clock_id(const string& hardware_type, const string& sensor_name, const int& sensor_index, const int& data_index)
 {
-	return hardware_type + "_Frequency_Core_Clock_" + sensor_name;
+	return hardware_type + "_Frequency_Core_Clock_" + sensor_name + "_" + to_string(sensor_index) + "_" + to_string(data_index);
 }
 
-const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const string& sensor_name)
+const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const string& sensor_name, const int& sensor_index, const int& data_index)
 {
-	return hardware_type + "_" + sensor_type + "_" + sensor_group + "_" + sensor_name;
+	return hardware_type + "_" + sensor_type + "_" + sensor_group + "_" + sensor_name + "_" + to_string(sensor_index) + "_" + to_string(data_index);
 }
 
 const vector<double> min_max_average(const vector<double>& values)

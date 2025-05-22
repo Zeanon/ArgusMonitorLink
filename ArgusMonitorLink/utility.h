@@ -12,8 +12,8 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
 
 const double get_double_value(const double& value, const string& sensor_type);
 
-const string core_clock_id(const string& hardware_type, const string& sensor_name);
+const string core_clock_id(const string& hardware_type, const string& sensor_name, const int& data_index, const int& sensor_index);
 
-const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const string& sensor_name);
+const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const string& sensor_name, const int& data_index, const int& sensor_index);
 
 const vector<double> min_max_average(const vector<double>& values);
