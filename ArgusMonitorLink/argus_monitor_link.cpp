@@ -137,8 +137,11 @@ namespace argus_monitor {
 					if (IsHardwareEnabled(types[0]))
 					{
 						//Sensor: <Name, Value, SensorType, HarwareType, Group>
-						const auto value = types[1] != "Text" ? to_string(argus_monitor_data->SensorData[index].Value) : name;
-						process_sensor_data(name.c_str(), value.c_str(), types[1], types[0], types[2]);
+						process_sensor_data(types[1] != "Text" ? name.c_str() : types[2],
+							                (types[1] == "Text" ? name : to_string(argus_monitor_data->SensorData[index].Value)).c_str(),
+							                types[1],
+							                types[0],
+							                types[2]);
 					}
 				}
 				return true;
@@ -173,21 +176,13 @@ namespace argus_monitor {
 
 				last_cycle_counter = argus_monitor_data->CycleCounter;
 
-				if (IsHardwareEnabled("ArgusMonitor"))
-				{
-					update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", "Argus Monitor Version").c_str(), (to_string(argus_monitor_data->ArgusMajor) + "." + to_string(argus_monitor_data->ArgusMinorA) + "." + to_string(argus_monitor_data->ArgusMinorB)).c_str());
-					update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", "Argus Monitor Build").c_str(), to_string(argus_monitor_data->ArgusBuild).c_str());
-					update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", "Argus Data API Version").c_str(), to_string(argus_monitor_data->Version).c_str());
-					update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", "Available Sensors").c_str(), to_string(argus_monitor_data->TotalSensorCount).c_str());
-				}
-
 				for (size_t index{}; index < argus_monitor_data->TotalSensorCount; ++index)
 				{
 					const wstring label(argus_monitor_data->SensorData[index].Label);
 					const string name(label.begin(), label.end());
 					const vector<const char*> types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
 
-					if (IsHardwareEnabled(types[0]))
+					if (IsHardwareEnabled(types[0]) && types[1] != "Text")
 					{
 						const auto value = get_double_value(argus_monitor_data->SensorData[index].Value, types[1]);
 						if ("CPU" == types[0])
@@ -208,7 +203,7 @@ namespace argus_monitor {
 							}
 						}
 
-						update(sensor_id(types[0], types[1], types[2], name).c_str(), types[1] == "Text" ? name.c_str() : to_string(value).c_str());
+						update(sensor_id(types[0], types[1], types[2], name).c_str(), to_string(value).c_str());
 					}
 				}
 
