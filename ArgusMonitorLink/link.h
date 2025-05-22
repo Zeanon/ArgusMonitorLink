@@ -11,6 +11,7 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include <list>
 #include <map>
 #include <string>
+#include <regex>
 
 
 using namespace std;
@@ -73,6 +74,7 @@ namespace argus_monitor {
 			                                              const char* sensor_type,
 			                                              const char* hardware_type,
 			                                              const char* sensor_group));
+			bool UpdateSensorData(void (update)(const char* id, const char* value));
 
 			void SetHardwareEnabled(const string &type, const bool &enabled);
 			bool IsHardwareEnabled(const string &type) const;
@@ -131,6 +133,11 @@ extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
                                                                               const char* hardware_type,
                                                                               const char* sensor_group)) {
 	return t->GetSensorData(process_sensor_data);
+}
+
+extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t, void (update)(const char* id, const char* value))
+{
+	return t->UpdateSensorData(update);
 }
 
 // Set the given hardware type to enabled/disabled
