@@ -6,8 +6,8 @@ Copyright (C) 2025 Zeanon
 Original License from https://github.com/argotronic/argus_data_api still applies
 **/
 
-#include "pch.h"
 #include "argus_monitor_link.h"
+#include "pch.h"
 
 
 using namespace std;
@@ -27,8 +27,8 @@ namespace argus_monitor {
 
 			int success{ 0 };
 			handle_file_mapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
-				                                   FALSE,                                      // do not inherit the name
-				                                   argus_monitor::data_api::kMappingName());   // name of mapping object
+			                                       FALSE,                                      // do not inherit the name
+			                                       argus_monitor::data_api::kMappingName());   // name of mapping object
 
 			if (nullptr == handle_file_mapping) {
 				return 1;
@@ -100,8 +100,8 @@ namespace argus_monitor {
 		                                                                const char* sensor_type,
 		                                                                const char* hardware_type,
 		                                                                const char* sensor_group,
-		                                                                const char* data_index,
-		                                                                const char* sensor_index))
+		                                                                const char* sensor_index,
+		                                                                const char* data_index))
 		{
 			if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
 				return false;
@@ -141,12 +141,12 @@ namespace argus_monitor {
 					{
 						//Sensor: <Name, Value, SensorType, HarwareType, Group>
 						process_sensor_data("Text" == types[1] ? types[2] : name.c_str(),
-							                ("Text" == types[1] ? name : to_string(argus_monitor_data->SensorData[index].Value)).c_str(),
-							                types[1],
-							                types[0],
-							                types[2],
-							                to_string(argus_monitor_data->SensorData[index].DataIndex).c_str(),
-							                to_string(argus_monitor_data->SensorData[index].SensorIndex).c_str());
+						                    ("Text" == types[1] ? name : to_string(argus_monitor_data->SensorData[index].Value)).c_str(),
+						                    types[1],
+						                    types[0],
+						                    types[2],
+						                    to_string(argus_monitor_data->SensorData[index].SensorIndex).c_str(),
+						                    to_string(argus_monitor_data->SensorData[index].DataIndex).c_str());
 					}
 				}
 				return true;
@@ -201,10 +201,10 @@ namespace argus_monitor {
 							if ("Multiplier" == types[1] && "Multiplier" == types[2])
 							{
 								multipliers[argus_monitor_data->SensorData[index].SensorIndex]
-									[core_clock_id(types[0],
-								                   name,
-										           argus_monitor_data->SensorData[index].SensorIndex,
-								                   argus_monitor_data->SensorData[index].DataIndex)] = value;
+								           [core_clock_id(types[0],
+								                          name,
+								                          argus_monitor_data->SensorData[index].SensorIndex,
+								                          argus_monitor_data->SensorData[index].DataIndex)] = value;
 							}
 
 							if ("Frequency" == types[1] && "FSB" == types[2])
@@ -218,7 +218,7 @@ namespace argus_monitor {
 						                 types[2],
 						                 name,
 						                 argus_monitor_data->SensorData[index].SensorIndex,
-							             argus_monitor_data->SensorData[index].DataIndex).c_str(),
+						                 argus_monitor_data->SensorData[index].DataIndex).c_str(),
 						       to_string(value).c_str());
 					}
 				}

@@ -7,18 +7,18 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 **/
 
 #pragma once
-#include "pch.h"
 #include "argus_monitor_data_api.h"
+#include "pch.h"
 #include "utility.h"
+#include <algorithm>
 #include <list>
 #include <map>
-#include <string>
-#include <regex>
 #include <memory>
-#include <stdexcept>
-#include <vector>
-#include <algorithm>
 #include <numeric>
+#include <regex>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 
 using namespace std;
@@ -141,8 +141,8 @@ extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
                                                                               const char* sensor_type,
                                                                               const char* hardware_type,
                                                                               const char* sensor_group,
-												                              const char* data_index,
-												                              const char* sensor_index)) {
+                                                                              const char* sensor_index,
+                                                                              const char* data_index)) {
 	return t->GetSensorData(process_sensor_data);
 }
 

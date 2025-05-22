@@ -1,10 +1,10 @@
 #pragma once
-#include "pch.h"
 #include "argus_monitor_data_api.h"
-#include <vector>
-#include <string>
+#include "pch.h"
 #include <algorithm>
 #include <numeric>
+#include <string>
+#include <vector>
 
 using namespace std;
 
