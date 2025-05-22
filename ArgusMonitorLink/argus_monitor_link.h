@@ -7,11 +7,18 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 **/
 
 #pragma once
+#include "pch.h"
 #include "argus_monitor_data_api.h"
+#include "utility.h"
 #include <list>
 #include <map>
 #include <string>
 #include <regex>
+#include <memory>
+#include <stdexcept>
+#include <vector>
+#include <algorithm>
+#include <numeric>
 
 
 using namespace std;
