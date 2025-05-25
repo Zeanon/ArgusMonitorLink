@@ -86,8 +86,9 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
 
 const double get_double_value(const double& value, const string& sensor_type)
 {
-	if (sensor_type == "Transfer") return value * 8;
-	if (sensor_type == "Usage" || sensor_type == "Total" || sensor_type == "Frequency" || sensor_type == "Clock") return value * 1000000;
+	if (sensor_type == "Transfer") return value * (1000000.0 / 131072); // (1000/1024) * (1000/1024) * 8
+	if (sensor_type == "Frequency" || sensor_type == "Clock") return value * 1000000;
+	if (sensor_type == "Usage" || sensor_type == "Total") return value * (1000000000.0 / 1024); // (1000/1024) * 1_000_000
 	return value;
 }
 
