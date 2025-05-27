@@ -12,8 +12,10 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include <cstddef>
 #include <cstdint>
 
-namespace argus_monitor {
-    namespace data_api {
+namespace argus_monitor
+{
+    namespace data_api
+    {
 
         //    static constexpr wchar_t const* kMappingName{L"Global\\ARGUSMONITOR_DATA_INTERFACE"};
         //    static constexpr wchar_t const* kMutexName{L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"};
@@ -22,7 +24,8 @@ namespace argus_monitor {
         inline wchar_t const* kMutexName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
         inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
 
-        enum ARGUS_MONITOR_SENSOR_TYPE {
+        enum ARGUS_MONITOR_SENSOR_TYPE
+        {
             SENSOR_TYPE_INVALID = 0,
             SENSOR_TYPE_TEMPERATURE,                   // temperatures of mainboard sensors, external fan controllers and AIOs
             SENSOR_TYPE_SYNTHETIC_TEMPERATURE,         // user defined synthetic temperatures (mean, max, average, difference, ...)
@@ -32,7 +35,7 @@ namespace argus_monitor {
             SENSOR_TYPE_CPU_TEMPERATURE,               // the normal CPU temperature readings, per core for Intel and the only one available for AMD
             SENSOR_TYPE_CPU_TEMPERATURE_ADDITIONAL,    // additional temperatures provided by the CPU, like CCDx temperatures of AMD CPUs
             SENSOR_TYPE_CPU_MULTIPLIER,                // multiplier value for every core (inside the CPU, those values are changed MUCH faster than the sampling
-            // frequency)
+                                                       // frequency)
             SENSOR_TYPE_CPU_FREQUENCY_FSB,             // core frequencies can be calculated by multiplying FSB frequency by the multipliers
             SENSOR_TYPE_GPU_TEMPERATURE,
             SENSOR_TYPE_GPU_NAME,                      // the name of the GPU (e.g. "Nvidia RTX3080")
@@ -59,16 +62,18 @@ namespace argus_monitor {
         const std::uint32_t kMaxLenUnit = 32U;
         const std::uint32_t kMaxLenLabel = 64U;
 
-        struct ArgusMonitorSensorData {
-            ARGUS_MONITOR_SENSOR_TYPE SensorType;                 // sensor type, see: enum ARGUS_MONITOR_SENSOR_TYPE
-            wchar_t                   Label[kMaxLenLabel];        // "user defined name, if available, source name otherwise
-            wchar_t                   UnitString[kMaxLenUnit];    // "°C, rpm, %, ..."
-            double                    Value;                      // fan speed / fan control value / temperature / load / usage / etc.
+        struct ArgusMonitorSensorData
+        {
+            ARGUS_MONITOR_SENSOR_TYPE SensorType;               // sensor type, see: enum ARGUS_MONITOR_SENSOR_TYPE
+            wchar_t                   Label[kMaxLenLabel];      // "user defined name, if available, source name otherwise
+            wchar_t                   UnitString[kMaxLenUnit];  // "°C, rpm, %, ..."
+            double                    Value;                    // fan speed / fan control value / temperature / load / usage / etc.
             std::uint32_t             DataIndex;      // for sensor which can provide multiple different readings, Core ID on multi core systems
             std::uint32_t             SensorIndex;    // for Sensors with multiple instances (e.g. CPU, GPU) CPU/GPU index
         };
 
-        struct ArgusMonitorData {
+        struct ArgusMonitorData
+        {
             std::uint32_t Signature;       // if Argus Monitor is active :0x4D677241 -- otherwise: 0x00000000'
             std::uint8_t  ArgusMajor;      // e.g. 5
             std::uint8_t  ArgusMinorA;     // e.g. 3

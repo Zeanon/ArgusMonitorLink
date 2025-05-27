@@ -1,8 +1,9 @@
 #pragma once
-#include "argus_monitor_data_api.h"
-#include "pch.h"
+#include "../ArgusMonitor/argus_monitor_data_api.h"
+#include "../dll/pch.h"
 #include <algorithm>
 #include <numeric>
+#include <regex>
 #include <string>
 #include <vector>
 

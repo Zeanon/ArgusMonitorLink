@@ -7,14 +7,16 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 **/
 
 #include "argus_monitor_link.h"
-#include "pch.h"
-#include "version.h"
+#include "dll/pch.h"
+#include "Version/version.h"
 
 
 using namespace std;
 
-namespace argus_monitor {
-    namespace data_api {
+namespace argus_monitor
+{
+    namespace data_api
+    {
         // Open the connection to Argus Monitor
         // return:
         //  0: connection is open
@@ -22,7 +24,8 @@ namespace argus_monitor {
         // 10: could not optain fileview
         int ArgusMonitorLink::Open()
         {
-            if (is_open_) {
+            if (is_open_)
+            {
                 return 0;
             }
 
@@ -30,20 +33,23 @@ namespace argus_monitor {
                                                    FALSE,                                      // do not inherit the name
                                                    argus_monitor::data_api::kMappingName());   // name of mapping object
 
-            if (nullptr == handle_file_mapping) {
+            if (nullptr == handle_file_mapping)
+            {
                 return 1;
             }
 
-            pointer_to_mapped_data = MapViewOfFile(handle_file_mapping,               // handle to map object
-                                                   FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
-                                                   0, 0, argus_monitor::data_api::kMappingSize());
+            argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(
+                                 MapViewOfFile(handle_file_mapping,               // handle to map object
+                                               FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
+                                               0, 0, argus_monitor::data_api::kMappingSize())
+                                 );
 
-            if (nullptr == pointer_to_mapped_data) {
+            if (nullptr == argus_monitor_data)
+            {
                 CloseHandle(handle_file_mapping);
                 return 10;
             }
 
-            argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(pointer_to_mapped_data);
             last_cycle_counter = 0;
 
             is_open_ = true;
@@ -62,12 +68,13 @@ namespace argus_monitor {
             is_open_ = false;
 
             int success{ 0 };
-            argus_monitor_data = nullptr;
-            if (pointer_to_mapped_data) {
-                success += UnmapViewOfFile(pointer_to_mapped_data) == 0 ? 1 : 0;
-                pointer_to_mapped_data = nullptr;
+            if (argus_monitor_data)
+            {
+                success += UnmapViewOfFile(argus_monitor_data) == 0 ? 1 : 0;
+                argus_monitor_data = nullptr;
             }
-            if (handle_file_mapping) {
+            if (handle_file_mapping)
+            {
                 success += CloseHandle(handle_file_mapping) == 0 ? 10 : 0;
                 handle_file_mapping = nullptr;
             }
@@ -77,18 +84,15 @@ namespace argus_monitor {
         // Check whether ArgusMonitor is active
         bool ArgusMonitorLink::CheckArgusSignature() const
         {
-            if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) {
-                return false;
-            }
+            if (nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) return false;
+
             return 0x4D677241 == argus_monitor_data->Signature;
         }
 
         // Get the total amount of sensors provided by Argus Monitor
-        int ArgusMonitorLink::GetTotalSensorCount() const
-        {
-            if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) {
-                return 0;
-            }
+        int ArgusMonitorLink::GetTotalSensorCount() const {
+            if (nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) return 0;
+
             return argus_monitor_data->TotalSensorCount;
         }
 
@@ -103,23 +107,18 @@ namespace argus_monitor {
                                                                         const char* sensor_index,
                                                                         const char* data_index))
         {
-            if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
-                return false;
-            }
+            if (nullptr == argus_monitor_data) return false;
 
             HANDLE mutex_handle = ArgusMonitorLink::OpenArgusApiMutex();
-            if (nullptr == mutex_handle) {
-                return false;
-            }
+
+            if (nullptr == mutex_handle) return false;
 
 
             {
                 Lock scoped_lock(mutex_handle);
                 // Check if new data is available
-                if (last_cycle_counter == argus_monitor_data->CycleCounter)
-                {
-                    return false;
-                }
+                if (last_cycle_counter == argus_monitor_data->CycleCounter) return false;
+
                 last_cycle_counter = argus_monitor_data->CycleCounter;
 
                 if (IsHardwareEnabled("ArgusMonitor"))
@@ -156,24 +155,17 @@ namespace argus_monitor {
 
         bool ArgusMonitorLink::UpdateSensorData(void (update)(const char* id, const char* value))
         {
-
-            if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data) {
-                return false;
-            }
+            if (nullptr == argus_monitor_data) return false;
 
             HANDLE mutex_handle = ArgusMonitorLink::OpenArgusApiMutex();
-            if (nullptr == mutex_handle) {
-                return false;
-            }
+
+            if (nullptr == mutex_handle) return false;
 
 
             {
                 Lock scoped_lock(mutex_handle);
                 // Check if new data is available
-                if (last_cycle_counter == argus_monitor_data->CycleCounter)
-                {
-                    return false;
-                }
+                if (last_cycle_counter == argus_monitor_data->CycleCounter) return false;
 
                 map<uint32_t, float> fsb_clocks;
                 map<uint32_t, vector<float>> cpu_temps;
@@ -202,10 +194,10 @@ namespace argus_monitor {
                             if ("Multiplier" == types[1] && "Multiplier" == types[2])
                             {
                                 multipliers[sensor_index]
-                                    [core_clock_id(types[0],
-                                                   name,
-                                                   sensor_index,
-                                                   data_index)] = value;
+                                           [core_clock_id(types[0],
+                                                          name,
+                                                          sensor_index,
+                                                          data_index)] = value;
                             }
 
                             if ("Frequency" == types[1] && "FSB" == types[2])

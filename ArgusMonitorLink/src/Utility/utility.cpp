@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "../dll/pch.h"
 #include "utility.h"
 
 using namespace std;
@@ -20,19 +20,15 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
     case argus_monitor::data_api::SENSOR_TYPE_CPU_LOAD:
         return { "CPU", "Percentage", "Load" };
 
-    case argus_monitor::data_api::SENSOR_TYPE_GPU_TEMPERATURE:
-        if (name.find("Memory") != string::npos) {
-            return { "GPU", "Temperature", "Memory" };
-        }
-        return { "GPU", "Temperature", "GPU" };
-    case argus_monitor::data_api::SENSOR_TYPE_GPU_FAN_SPEED_RPM:
-        return { "GPU", "RPM", "Fan" };
-    case argus_monitor::data_api::SENSOR_TYPE_GPU_FAN_SPEED_PERCENT:
-        return { "GPU", "Percentage", "Fan" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_NAME:
         return { "GPU", "Text", "Name" };
-    case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
-        return { "GPU", "Load", "GPU" };
+    case argus_monitor::data_api::SENSOR_TYPE_GPU_TEMPERATURE:
+        if (name.contains("Memory")) return { "GPU", "Temperature", "Memory" };
+        return { "GPU", "Temperature", "GPU" };
+    case argus_monitor::data_api::SENSOR_TYPE_GPU_FAN_SPEED_PERCENT:
+        return { "GPU", "Percentage", "Fan" };
+    case argus_monitor::data_api::SENSOR_TYPE_GPU_FAN_SPEED_RPM:
+        return { "GPU", "RPM", "Fan" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_CORECLK:
         return { "GPU", "Frequency", "GPU" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORYCLK:
@@ -43,23 +39,21 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
         return { "GPU", "Percentage", "Memory" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_MEMORY_USED_MB:
         return { "GPU", "Usage", "Memory" };
+    case argus_monitor::data_api::SENSOR_TYPE_GPU_LOAD:
+        return { "GPU", "Load", "GPU" };
     case argus_monitor::data_api::SENSOR_TYPE_GPU_POWER:
         return { "GPU", "Power", "GPU" };
 
-    case argus_monitor::data_api::SENSOR_TYPE_FAN_SPEED_RPM:
-        return { "Mainboard", "RPM", "Fan" };
     case argus_monitor::data_api::SENSOR_TYPE_FAN_CONTROL_VALUE:
         return { "Mainboard", "Percentage", "Fan" };
+    case argus_monitor::data_api::SENSOR_TYPE_FAN_SPEED_RPM:
+        return { "Mainboard", "RPM", "Fan" };
     case argus_monitor::data_api::SENSOR_TYPE_TEMPERATURE:
         return { "Mainboard", "Temperature", "Sensor" };
 
     case argus_monitor::data_api::SENSOR_TYPE_RAM_USAGE:
-        if (name.find("Total") != string::npos) {
-            return { "RAM", "Total", "RAM" };
-        }
-        if (name.find("Used") != string::npos) {
-            return { "RAM", "Usage", "RAM" };
-        }
+        if (name.contains("Total")) return { "RAM", "Total", "RAM" };
+        if (name.contains("Used"))  return { "RAM", "Usage", "RAM" };
         return { "RAM", "Percentage", "RAM" };
 
     case argus_monitor::data_api::SENSOR_TYPE_DISK_TEMPERATURE:
