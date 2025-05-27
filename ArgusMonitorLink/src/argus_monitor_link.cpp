@@ -39,10 +39,10 @@ namespace argus_monitor
             }
 
             argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(
-                                 MapViewOfFile(handle_file_mapping,               // handle to map object
-                                               FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
-                                               0, 0, argus_monitor::data_api::kMappingSize())
-                                 );
+                MapViewOfFile(handle_file_mapping,               // handle to map object
+                              FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
+                              0, 0, argus_monitor::data_api::kMappingSize())
+                );
 
             if (nullptr == argus_monitor_data)
             {
@@ -126,7 +126,7 @@ namespace argus_monitor
                     process_sensor_data("Argus Monitor Version", (to_string(argus_monitor_data->ArgusMajor) + "." + to_string(argus_monitor_data->ArgusMinorA) + "." + to_string(argus_monitor_data->ArgusMinorB)).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
                     process_sensor_data("Argus Monitor Build", to_string(argus_monitor_data->ArgusBuild).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
                     process_sensor_data("Argus Data API Version", to_string(argus_monitor_data->Version).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
-                    process_sensor_data("ArgusMonitorLink Version", VER_FILE_VERSION_STR , "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
+                    process_sensor_data("ArgusMonitorLink Version", VER_FILE_VERSION_STR, "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
                     process_sensor_data("Available Sensors", to_string(argus_monitor_data->TotalSensorCount).c_str(), "Text", "ArgusMonitor", "Argus Monitor", 0, 0);
                 }
 
@@ -194,10 +194,10 @@ namespace argus_monitor
                             if ("Multiplier" == types[1] && "Multiplier" == types[2])
                             {
                                 multipliers[sensor_index]
-                                           [core_clock_id(types[0],
-                                                          name,
-                                                          sensor_index,
-                                                          data_index)] = value;
+                                    [core_clock_id(types[0],
+                                                   name,
+                                                   sensor_index,
+                                                   data_index)] = value;
                             }
 
                             if ("Frequency" == types[1] && "FSB" == types[2])
