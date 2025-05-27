@@ -43,7 +43,7 @@ namespace argus_monitor {
         class ArgusMonitorLink {
         private:
             HANDLE                                           handle_file_mapping{ nullptr };
-            void* pointer_to_mapped_data{ nullptr };
+            void*                                            pointer_to_mapped_data{ nullptr };
             bool                                             is_open_{ false };
             uint32_t                                         last_cycle_counter{ 0 };
             const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data{ nullptr };

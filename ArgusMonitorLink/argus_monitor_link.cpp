@@ -26,7 +26,6 @@ namespace argus_monitor {
                 return 0;
             }
 
-            int success{ 0 };
             handle_file_mapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
                                                    FALSE,                                      // do not inherit the name
                                                    argus_monitor::data_api::kMappingName());   // name of mapping object
@@ -81,7 +80,7 @@ namespace argus_monitor {
             if (nullptr == pointer_to_mapped_data || nullptr == argus_monitor_data || nullptr == ArgusMonitorLink::OpenArgusApiMutex()) {
                 return false;
             }
-            return argus_monitor_data->Signature == 0x4D677241;
+            return 0x4D677241 == argus_monitor_data->Signature;
         }
 
         // Get the total amount of sensors provided by Argus Monitor
@@ -186,13 +185,13 @@ namespace argus_monitor {
                 {
                     const wstring label(argus_monitor_data->SensorData[index].Label);
                     const string name(label.begin(), label.end());
-                    const vector<const char*> types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
+                    const auto& types = ParseTypes(argus_monitor_data->SensorData[index].SensorType, name);
 
                     if (IsHardwareEnabled(types[0]) && "Text" != types[1])
                     {
-                        const auto value = get_float_value(argus_monitor_data->SensorData[index].Value, types[1]);
-                        const auto &sensor_index = argus_monitor_data->SensorData[index].SensorIndex;
-                        const auto &data_index = argus_monitor_data->SensorData[index].DataIndex;
+                        const auto& value = get_float_value(argus_monitor_data->SensorData[index].Value, types[1]);
+                        const auto& sensor_index = argus_monitor_data->SensorData[index].SensorIndex;
+                        const auto& data_index = argus_monitor_data->SensorData[index].DataIndex;
                         if ("CPU" == types[0])
                         {
                             if ("Temperature" == types[1] && "Temperature" == types[2])
