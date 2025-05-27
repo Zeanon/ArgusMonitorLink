@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by ArgusMonitorLink.rc
+// Used by version.rc
 
 // Next default values for new objects
 //
