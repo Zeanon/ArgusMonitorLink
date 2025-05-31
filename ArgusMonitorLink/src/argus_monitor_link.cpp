@@ -186,7 +186,7 @@ namespace argus_monitor
                                      types[2],
                                      sensor_index,
                                      data_index).c_str(),
-                            to_string(value).c_str());
+                           to_string(value).c_str());
                 }
             }
 
@@ -206,6 +206,7 @@ namespace argus_monitor
                             if (value.second < min_multiplier) min_multiplier = value.second;
                             if (value.second > max_multiplier) max_multiplier = value.second;
                             sum_multiplier += value.second;
+
                             update(value.first.c_str(), to_string(value.second * fsb_clock.second).c_str());
                         }
                         const float& average_multiplier = sum_multiplier / multiplier_size;
