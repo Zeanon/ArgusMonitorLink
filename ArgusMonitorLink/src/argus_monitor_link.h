@@ -1,9 +1,9 @@
 /**
-Argus Monitor Data API, based on https://github.com/argotronic/argus_data_api/blob/master/argus_monitor_data_accessor.h
+Argus Monitor Data API, loosely based on https://github.com/argotronic/argus_data_api/blob/master/argus_monitor_data_accessor.h
 Modified to not use multiple threads and "push" updates to a function but rather be completely poll based to save on memory and cpu
 
 Copyright (C) 2025 Zeanon
-Original License from https://github.com/argotronic/argus_data_api still applies
+Original License from https://github.com/argotronic/argus_data_api still applies.
 **/
 
 #pragma once
@@ -11,6 +11,7 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include "ArgusMonitor/argus_monitor_data_api.h"
 #include "dll/pch.h"
 #include "utility/utility.h"
+#include "Version/version.h"
 #include <algorithm>
 #include <list>
 #include <map>
@@ -32,14 +33,14 @@ namespace argus_monitor
             class Lock
             {
             private:
-                HANDLE mutex_handle_;
+                const HANDLE mutex_handle_;
 
             public:
-                explicit Lock(HANDLE& mutex_handle)
-                    : mutex_handle_{ mutex_handle }
+                explicit Lock(const HANDLE& mutex_handle) : mutex_handle_{ mutex_handle }
                 {
                     WaitForSingleObject(mutex_handle_, INFINITE);
                 }
+
                 ~Lock() { ReleaseMutex(mutex_handle_); }
             };
         }
@@ -47,10 +48,11 @@ namespace argus_monitor
         class ArgusMonitorLink
         {
         private:
-            bool                                             is_open_{ false };
-            HANDLE                                           handle_file_mapping{ nullptr };
-            const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data{ nullptr };
-            uint32_t                                         last_cycle_counter{ 0 };
+            bool                                             is_open             { false };
+            HANDLE                                           file_mapping_handle { nullptr };
+            HANDLE                                           mutex_handle        { nullptr };
+            const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data  { nullptr };
+            uint32_t                                         last_cycle_counter  { 0 };
 
             map<const string, bool> enabled_hardware = {
                 {"CPU", true},
@@ -67,20 +69,20 @@ namespace argus_monitor
         public:
             ArgusMonitorLink() = default;
 
-            ArgusMonitorLink(ArgusMonitorLink const&) = delete;
-            ArgusMonitorLink(ArgusMonitorLink&&) = delete;
+            ArgusMonitorLink(ArgusMonitorLink const&)            = delete;
+            ArgusMonitorLink(ArgusMonitorLink&&)                 = delete;
             ArgusMonitorLink& operator=(ArgusMonitorLink const&) = delete;
-            ArgusMonitorLink& operator=(ArgusMonitorLink&&) = delete;
+            ArgusMonitorLink& operator=(ArgusMonitorLink&&)      = delete;
 
             ~ArgusMonitorLink() { Close(); }
 
             int  Open();
-            bool IsOpen() const noexcept { return is_open_; }
+            bool IsOpen() const noexcept { return is_open; }
             int  Close();
 
-            bool CheckArgusSignature() const;
-            int  GetTotalSensorCount() const;
-            bool GetSensorData(void (process_sensor_data)(const char* sensor_name,
+            bool CheckArgusSignature() const { return 0x4D677241 == argus_monitor_data->Signature; }
+            int  GetTotalSensorCount() const { return argus_monitor_data->TotalSensorCount; }
+            void GetSensorData(void (process_sensor_data)(const char* sensor_name,
                                                           const char* sensor_value,
                                                           const char* sensor_type,
                                                           const char* hardware_type,
@@ -105,9 +107,10 @@ extern "C" _declspec(dllexport) void* Instantiate()
 
 // Open the connection to Argus Monitor
 // return:
-//  0: connection is open
-//  1: could not open file mapping
-// 10: could not optain fileview
+//   0: connection is open
+//   1: could not open file mapping
+//  10: could not optain fileview
+// 100: could not open ArgusApiMutex
 extern "C" _declspec(dllexport) int Open(ArgusMonitorLink* t)
 {
     return t->Open();
@@ -145,7 +148,7 @@ extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t)
 // Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
 // add it to an external collection
 // returns true if new data was available and false if no new data was available
-extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
+extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
                                                    void (process_sensor_data)(const char* sensor_name,
                                                                               const char* sensor_value,
                                                                               const char* sensor_type,
@@ -154,7 +157,7 @@ extern "C" _declspec(dllexport) bool GetSensorData(ArgusMonitorLink* t,
                                                                               const char* sensor_index,
                                                                               const char* data_index))
 {
-    return t->GetSensorData(process_sensor_data);
+    t->GetSensorData(process_sensor_data);
 }
 
 extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t, void (update)(const char* id, const char* value))

@@ -21,7 +21,7 @@ namespace argus_monitor
         //    static constexpr wchar_t const* kMutexName{L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"};
         //    static constexpr std::size_t    kMappingSize{1024U * 1024U};
         inline wchar_t const* kMappingName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE"; }
-        inline wchar_t const* kMutexName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
+        inline wchar_t const* kMutexName()   { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
         inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
 
         enum ARGUS_MONITOR_SENSOR_TYPE
