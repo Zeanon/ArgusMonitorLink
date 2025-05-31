@@ -258,7 +258,7 @@ namespace argus_monitor
         {
             try
             {
-                return &enabled_hardware.at(type);
+                return enabled_hardware.at(type);
             }
             catch (const out_of_range& _)
             {
