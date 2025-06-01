@@ -142,6 +142,24 @@ namespace argus_monitor
             // Check if new data is available
             if (last_cycle_counter == argus_monitor_data->CycleCounter) return false;
 
+            if (IsHardwareEnabled("ArgusMonitor"))
+            {
+                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 0).c_str(),
+                       (to_string(argus_monitor_data->ArgusMajor)
+                        + "."
+                        + to_string(argus_monitor_data->ArgusMinorA)
+                        + "."
+                        + to_string(argus_monitor_data->ArgusMinorB)).c_str());
+                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 1).c_str(),
+                       to_string(argus_monitor_data->ArgusBuild).c_str());
+                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 2).c_str(),
+                       to_string(argus_monitor_data->Version).c_str());
+                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 3).c_str(),
+                       VER_FILE_VERSION_STR);
+                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 4).c_str(),
+                       to_string(argus_monitor_data->TotalSensorCount).c_str());
+            }
+
             map<uint32_t, float> fsb_clocks;
             map<uint32_t, vector<float>> cpu_temps;
             map<uint32_t, map<string, float>> multipliers;

@@ -21,6 +21,6 @@ const float get_float_value(const float& value, const string& sensor_type);
 
 const string core_clock_id(const string& hardware_type, const int& data_index, const int& sensor_index);
 
-const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const int& data_index, const int& sensor_index);
+const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const int& sensor_index, const int& data_index);
 
 const vector<float> min_max_average(const vector<float>& values);
