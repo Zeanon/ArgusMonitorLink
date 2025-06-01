@@ -58,10 +58,11 @@ namespace argus_monitor
                 {"CPU", true},
                 {"GPU", true},
                 {"RAM", true},
-                {"Mainboard", true},
+                {"Fan", true},
                 {"Drive", true},
                 {"Network", true},
                 {"Battery", true},
+                {"Temperature", true},
                 {"ArgusMonitor", true}
             };
 
