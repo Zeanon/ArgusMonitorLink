@@ -54,8 +54,6 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
             return { "Fan", "Percentage", "Power" };
         case argus_monitor::data_api::SENSOR_TYPE_FAN_SPEED_RPM:
             return { "Fan", "RPM", "RPM" };
-        case argus_monitor::data_api::SENSOR_TYPE_TEMPERATURE:
-            return { "Temperature", "Temperature", "Temperature" };
 
         case argus_monitor::data_api::SENSOR_TYPE_RAM_USAGE:
             if (name.contains("Total")) return { "RAM", "Total", "RAM" };
@@ -73,8 +71,11 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
         case argus_monitor::data_api::SENSOR_TYPE_BATTERY:
             return { "Battery", "Percentage", "Battery" };
 
+        case argus_monitor::data_api::SENSOR_TYPE_TEMPERATURE:
+            return { "Temperature", "Temperature", "Temperature Sensor" };
         case argus_monitor::data_api::SENSOR_TYPE_SYNTHETIC_TEMPERATURE:
             return { "Temperature", "Temperature", "Synthetic Temperature" };
+
         case argus_monitor::data_api::SENSOR_TYPE_MAX_SENSORS:
             return { "ArgusMonitor", "Numeric", "Sensor" };
 
