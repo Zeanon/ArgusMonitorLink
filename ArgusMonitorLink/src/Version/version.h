@@ -8,7 +8,7 @@
 #define VERSION_MAJOR               1
 #define VERSION_MINOR               2
 #define VERSION_REVISION            0
-#define VERSION_BUILD               2
+#define VERSION_BUILD               3
  
 #define VER_FILE_DESCRIPTION_STR    "Dll to communicate between the MoBro Argus Monitor plugin nd Argus Monitor"
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
