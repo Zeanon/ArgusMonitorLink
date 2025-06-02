@@ -199,12 +199,15 @@ namespace argus_monitor
                         }
                     }
 
-                    update(sensor_id(types[0],
-                                     types[1],
-                                     types[2],
-                                     sensor_index,
-                                     data_index).c_str(),
-                           to_string(value).c_str());
+                    if ("Temperature" != types[1] || value > 0.0)
+                    {
+                        update(sensor_id(types[0],
+                                         types[1],
+                                         types[2],
+                                         sensor_index,
+                                         data_index).c_str(),
+                               to_string(value).c_str());
+                    }
                 }
             }
 
