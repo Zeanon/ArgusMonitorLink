@@ -123,9 +123,10 @@ namespace argus_monitor
 
                 if (IsHardwareEnabled(types[0]))
                 {
+                    const auto& value = get_float_value(sensor_data.Value, types[1]);
                     //Sensor: <Name, Value, SensorType, HarwareType, Group>
                     process_sensor_data("Text" == types[1] ? types[2] : name.c_str(),
-                                        ("Text" == types[1] ? name : to_string(sensor_data.Value)).c_str(),
+                                        ("Text" == types[1] ? name : to_string(value)).c_str(),
                                         types[1],
                                         types[0],
                                         types[2],
@@ -135,30 +136,12 @@ namespace argus_monitor
             }
         }
 
-        bool ArgusMonitorLink::UpdateSensorData(void (update)(const char* id, const char* value))
+        bool ArgusMonitorLink::UpdateSensorData(void (update)(const char* sensor_id, const float sensor_value))
         {
             Lock scoped_lock(mutex_handle);
 
             // Check if new data is available
             if (last_cycle_counter == argus_monitor_data->CycleCounter) return false;
-
-            if (IsHardwareEnabled("ArgusMonitor"))
-            {
-                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 0).c_str(),
-                       (to_string(argus_monitor_data->ArgusMajor)
-                        + "."
-                        + to_string(argus_monitor_data->ArgusMinorA)
-                        + "."
-                        + to_string(argus_monitor_data->ArgusMinorB)).c_str());
-                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 1).c_str(),
-                       to_string(argus_monitor_data->ArgusBuild).c_str());
-                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 2).c_str(),
-                       to_string(argus_monitor_data->Version).c_str());
-                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 3).c_str(),
-                       VER_FILE_VERSION_STR);
-                update(sensor_id("ArgusMonitor", "Text", "Argus Monitor", 0, 4).c_str(),
-                       to_string(argus_monitor_data->TotalSensorCount).c_str());
-            }
 
             map<uint32_t, float> fsb_clocks;
             map<uint32_t, vector<float>> cpu_temps;
@@ -176,37 +159,37 @@ namespace argus_monitor
                 if (IsHardwareEnabled(types[0]) && "Text" != types[1])
                 {
                     const auto& value = get_float_value(sensor_data.Value, types[1]);
-                    const auto& sensor_index = sensor_data.SensorIndex;
-                    const auto& data_index = sensor_data.DataIndex;
-                    if ("CPU" == types[0])
+                    if (value >= 0 && ("Temperature" != types[1] || value > 0))
                     {
-                        if ("Temperature" == types[1] && "Temperature" == types[2])
+                        const auto& sensor_index = sensor_data.SensorIndex;
+                        const auto& data_index = sensor_data.DataIndex;
+                        if ("CPU" == types[0])
                         {
-                            cpu_temps[sensor_index].push_back(value);
+                            if ("Temperature" == types[1] && "Temperature" == types[2])
+                            {
+                                cpu_temps[sensor_index].push_back(value);
+                            }
+
+                            if ("Multiplier" == types[1] && "Multiplier" == types[2])
+                            {
+                                multipliers[sensor_index]
+                                    [core_clock_id(types[0],
+                                                   sensor_index,
+                                                   data_index)] = value;
+                            }
+
+                            if ("Frequency" == types[1] && "FSB" == types[2])
+                            {
+                                fsb_clocks[sensor_index] = value;
+                            }
                         }
 
-                        if ("Multiplier" == types[1] && "Multiplier" == types[2])
-                        {
-                            multipliers[sensor_index]
-                                [core_clock_id(types[0],
-                                               sensor_index,
-                                               data_index)] = value;
-                        }
-
-                        if ("Frequency" == types[1] && "FSB" == types[2])
-                        {
-                            fsb_clocks[sensor_index] = value;
-                        }
-                    }
-
-                    if ("Temperature" != types[1] || value > 0.0)
-                    {
                         update(sensor_id(types[0],
                                          types[1],
                                          types[2],
                                          sensor_index,
                                          data_index).c_str(),
-                               to_string(value).c_str());
+                               value);
                     }
                 }
             }
@@ -228,17 +211,17 @@ namespace argus_monitor
                             if (value.second > max_multiplier) max_multiplier = value.second;
                             sum_multiplier += value.second;
 
-                            update(value.first.c_str(), to_string(value.second * fsb_clock.second).c_str());
+                            update(value.first.c_str(), value.second * fsb_clock.second);
                         }
                         const float& average_multiplier = sum_multiplier / multiplier_size;
 
                         const auto& id = to_string(fsb_clock.first);
-                        update(("CPU_Multiplier_Multiplier_Max_" + id).c_str(), to_string(max_multiplier).c_str());
-                        update(("CPU_Frequency_Core_Clock_Max_" + id).c_str(), to_string(max_multiplier * fsb_clock.second).c_str());
-                        update(("CPU_Multiplier_Multiplier_Average_" + id).c_str(), to_string(average_multiplier).c_str());
-                        update(("CPU_Frequency_Core_Clock_Average_" + id).c_str(), to_string(average_multiplier * fsb_clock.second).c_str());
-                        update(("CPU_Multiplier_Multiplier_Min_" + id).c_str(), to_string(min_multiplier).c_str());
-                        update(("CPU_Frequency_Core_Clock_Min_" + id).c_str(), to_string(min_multiplier * fsb_clock.second).c_str());
+                        update(("CPU_Multiplier_Multiplier_Max_" + id).c_str(), max_multiplier);
+                        update(("CPU_Frequency_Core_Clock_Max_" + id).c_str(), max_multiplier * fsb_clock.second);
+                        update(("CPU_Multiplier_Multiplier_Average_" + id).c_str(), average_multiplier);
+                        update(("CPU_Frequency_Core_Clock_Average_" + id).c_str(), average_multiplier * fsb_clock.second);
+                        update(("CPU_Multiplier_Multiplier_Min_" + id).c_str(), min_multiplier);
+                        update(("CPU_Frequency_Core_Clock_Min_" + id).c_str(), min_multiplier * fsb_clock.second);
                     }
                 }
             }
@@ -260,9 +243,9 @@ namespace argus_monitor
                         }
 
                         const auto& id = to_string(cpu_temp.first);
-                        update(("CPU_Temperature_Temperature_Max_" + id).c_str(), to_string(max_temp).c_str());
-                        update(("CPU_Temperature_Temperature_Average_" + id).c_str(), to_string(sum_temp / cpu_temp.second.size()).c_str());
-                        update(("CPU_Temperature_Temperature_Min_" + id).c_str(), to_string(min_temp).c_str());
+                        update(("CPU_Temperature_Temperature_Max_" + id).c_str(), max_temp);
+                        update(("CPU_Temperature_Temperature_Average_" + id).c_str(), sum_temp / cpu_temp.second.size());
+                        update(("CPU_Temperature_Temperature_Min_" + id).c_str(), min_temp);
                     }
                 }
             }

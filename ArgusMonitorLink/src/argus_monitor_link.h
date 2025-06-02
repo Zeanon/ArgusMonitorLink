@@ -90,7 +90,7 @@ namespace argus_monitor
                                                           const char* sensor_group,
                                                           const char* sensor_index,
                                                           const char* data_index));
-            bool UpdateSensorData(void (update)(const char* id, const char* value));
+            bool UpdateSensorData(void (update)(const char* sensor_id, const float sensor_value));
 
             void SetHardwareEnabled(const string& type, const bool& enabled);
             bool IsHardwareEnabled(const string& type) const;
@@ -161,7 +161,8 @@ extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
     t->GetSensorData(process_sensor_data);
 }
 
-extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t, void (update)(const char* id, const char* value))
+extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t,
+                                                      void (update)(const char* sensor_id, const float sensor_value))
 {
     return t->UpdateSensorData(update);
 }
@@ -180,5 +181,5 @@ extern "C" _declspec(dllexport) bool IsHardwareEnabled(ArgusMonitorLink* t, cons
 
 extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t)
 {
-    t->~ArgusMonitorLink();
+    delete t;
 }
