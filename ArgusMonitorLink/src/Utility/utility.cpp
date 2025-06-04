@@ -85,7 +85,7 @@ vector<const char*> ParseTypes(const argus_monitor::data_api::ARGUS_MONITOR_SENS
     }
 }
 
-const float get_float_value(const float& value, const string& sensor_type)
+const float GetFloatValue(const float& value, const string& sensor_type)
 {
     if (sensor_type == "Transfer") return (value * 1000000) / 131072; // (1000/1024) * (1000/1024) * 8
     if (sensor_type == "Frequency" || sensor_type == "Clock") return value * 1000000;
@@ -93,17 +93,17 @@ const float get_float_value(const float& value, const string& sensor_type)
     return value;
 }
 
-const string core_clock_id(const string& hardware_type, const int& sensor_index, const int& data_index)
+const string CoreClockId(const string& hardware_type, const int& sensor_index, const int& data_index)
 {
     return hardware_type + "_Frequency_Core_Clock_" + to_string(sensor_index) + "_" + to_string(data_index);
 }
 
-const string sensor_id(const string& hardware_type, const string& sensor_type, const string& sensor_group, const int& sensor_index, const int& data_index)
+const string SensorId(const string& hardware_type, const string& sensor_type, const string& sensor_group, const int& sensor_index, const int& data_index)
 {
     return hardware_type + "_" + sensor_type + "_" + sensor_group + "_" + to_string(sensor_index) + "_" + to_string(data_index);
 }
 
-const vector<float> min_max_average(const vector<float>& values)
+const vector<float> MinMaxAverage(const vector<float>& values)
 {
     float min_value = FLT_MAX;
     float max_value = -FLT_MAX;

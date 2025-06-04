@@ -123,7 +123,7 @@ namespace argus_monitor
 
                 if (IsHardwareEnabled(types[0]))
                 {
-                    const auto& value = get_float_value(sensor_data.Value, types[1]);
+                    const auto& value = GetFloatValue(sensor_data.Value, types[1]);
                     //Sensor: <Name, Value, SensorType, HarwareType, Group>
                     process_sensor_data("Text" == types[1] ? types[2] : name.c_str(),
                                         ("Text" == types[1] ? name : to_string(value)).c_str(),
@@ -158,7 +158,7 @@ namespace argus_monitor
 
                 if (IsHardwareEnabled(types[0]) && "Text" != types[1])
                 {
-                    const auto& value = get_float_value(sensor_data.Value, types[1]);
+                    const auto& value = GetFloatValue(sensor_data.Value, types[1]);
                     if (value >= 0 && ("Temperature" != types[1] || value > 0))
                     {
                         const auto& sensor_index = sensor_data.SensorIndex;
@@ -173,7 +173,7 @@ namespace argus_monitor
                             if ("Multiplier" == types[1] && "Multiplier" == types[2])
                             {
                                 multipliers[sensor_index]
-                                    [core_clock_id(types[0],
+                                    [CoreClockId(types[0],
                                                    sensor_index,
                                                    data_index)] = value;
                             }
@@ -184,7 +184,7 @@ namespace argus_monitor
                             }
                         }
 
-                        update(sensor_id(types[0],
+                        update(SensorId(types[0],
                                          types[1],
                                          types[2],
                                          sensor_index,
