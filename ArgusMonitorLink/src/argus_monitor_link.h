@@ -66,7 +66,7 @@ namespace argus_monitor
                 {"ArgusMonitor", true}
             };
 
-            static HANDLE OpenArgusApiMutex() { return OpenMutexW(READ_CONTROL | MUTANT_QUERY_STATE | SYNCHRONIZE, FALSE, kMutexName); }
+            static inline HANDLE OpenArgusApiMutex() { return OpenMutexW(READ_CONTROL | MUTANT_QUERY_STATE | SYNCHRONIZE, FALSE, kMutexName()); }
         public:
             ArgusMonitorLink() = default;
 

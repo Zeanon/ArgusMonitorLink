@@ -15,12 +15,12 @@ namespace argus_monitor
 {
     namespace data_api
     {
-        static constexpr wchar_t const* kMappingName{ L"Global\\ARGUSMONITOR_DATA_INTERFACE" };
-        static constexpr wchar_t const* kMutexName  { L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX" };
-        static constexpr std::size_t    kMappingSize{ 1024U * 1024U };
-        //    inline wchar_t const* kMappingName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE"; }
-        //    inline wchar_t const* kMutexName()   { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
-        //    inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
+        //    static constexpr wchar_t const* kMappingName{ L"Global\\ARGUSMONITOR_DATA_INTERFACE" };
+        //    static constexpr wchar_t const* kMutexName  { L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX" };
+        //    static constexpr std::size_t    kMappingSize{ 1024U * 1024U };
+        inline wchar_t const* kMappingName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE"; }
+        inline wchar_t const* kMutexName()   { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
+        inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
 
         enum ARGUS_MONITOR_SENSOR_TYPE
         {
@@ -64,7 +64,7 @@ namespace argus_monitor
         {
             ARGUS_MONITOR_SENSOR_TYPE SensorType;               // sensor type, see: enum ARGUS_MONITOR_SENSOR_TYPE
             wchar_t                   Label[kMaxLenLabel];      // "user defined name, if available, source name otherwise
-            wchar_t                   UnitString[kMaxLenUnit];  // "°C, rpm, %, ..."
+            wchar_t                   UnitString[kMaxLenUnit];  // "ï¿½C, rpm, %, ..."
             double                    Value;                    // fan speed / fan control value / temperature / load / usage / etc.
             std::uint32_t             DataIndex;      // for sensor which can provide multiple different readings, Core ID on multi core systems
             std::uint32_t             SensorIndex;    // for Sensors with multiple instances (e.g. CPU, GPU) CPU/GPU index

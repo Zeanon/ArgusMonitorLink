@@ -22,19 +22,19 @@ namespace argus_monitor
 
             file_mapping_handle = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
                                                    FALSE,                                      // do not inherit the name
-                                                   kMappingName);   // name of mapping object
+                                                   kMappingName());                            // name of mapping object
 
             if (nullptr == file_mapping_handle)
             {
                 return 1;
             }
 
-            argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(
+            argus_monitor_data = reinterpret_cast<ArgusMonitorData const*>(
                 MapViewOfFile(file_mapping_handle,               // handle to map object
                               FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
                               0,
                               0,
-                              kMappingSize)
+                              kMappingSize())
                 );
 
             if (nullptr == argus_monitor_data)
@@ -43,7 +43,7 @@ namespace argus_monitor
                 return 10;
             }
 
-            mutex_handle = ArgusMonitorLink::OpenArgusApiMutex();
+            mutex_handle = OpenArgusApiMutex();
 
             if (nullptr == mutex_handle)
             {
