@@ -9,18 +9,10 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include "argus_monitor_link.h"
 
 
-using namespace std;
-
 namespace argus_monitor
 {
     namespace data_api
     {
-        // Open the connection to Argus Monitor
-        // return:
-        //   0: connection is open
-        //   1: could not open file mapping
-        //  10: could not optain fileview
-        // 100: could not open ArgusApiMutex
         int ArgusMonitorLink::Open()
         {
             if (is_open)
@@ -30,7 +22,7 @@ namespace argus_monitor
 
             file_mapping_handle = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE,             // read/write access
                                                    FALSE,                                      // do not inherit the name
-                                                   argus_monitor::data_api::kMappingName());   // name of mapping object
+                                                   kMappingName);   // name of mapping object
 
             if (nullptr == file_mapping_handle)
             {
@@ -40,7 +32,9 @@ namespace argus_monitor
             argus_monitor_data = reinterpret_cast<argus_monitor::data_api::ArgusMonitorData const*>(
                 MapViewOfFile(file_mapping_handle,               // handle to map object
                               FILE_MAP_READ | FILE_MAP_WRITE,    // read/write permission
-                              0, 0, argus_monitor::data_api::kMappingSize())
+                              0,
+                              0,
+                              kMappingSize)
                 );
 
             if (nullptr == argus_monitor_data)
@@ -63,12 +57,6 @@ namespace argus_monitor
             return 0;
         }
 
-        // Clean up the file handle and unmap the fileview
-        // return:
-        //  0: successfully unmaped the fileview and closed the handle
-        //  1: Could not unmap the fileview
-        // 10: Could not close the handle
-        // 11: Neither was possible
         int ArgusMonitorLink::Close()
         {
             is_open = false;
@@ -93,8 +81,6 @@ namespace argus_monitor
             return success;
         }
 
-        // Get the data from argus monitor and if its new, call the passed delegate method
-        // returns true if new data was available and false if no new data was available
         void ArgusMonitorLink::GetSensorData(void (process_sensor_data)(const char* sensor_name,
                                                                         const char* sensor_value,
                                                                         const char* sensor_type,
@@ -119,17 +105,20 @@ namespace argus_monitor
                 const auto& sensor_data = argus_monitor_data->SensorData[index];
                 const wstring label(sensor_data.Label);
                 const string name(label.begin(), label.end());
-                const auto& types = ParseTypes(sensor_data.SensorType, name);
+                const char* hardware_type;
+                const char* sensor_type;
+                const char* sensor_group;
+                ParseTypes(sensor_data.SensorType, name, hardware_type, sensor_type, sensor_group);
 
-                if (IsHardwareEnabled(types[0]))
+                if (IsHardwareEnabled(hardware_type))
                 {
-                    const auto& value = GetFloatValue(sensor_data.Value, types[1]);
+                    const auto& value = GetFloatValue(sensor_data.Value, sensor_type);
                     //Sensor: <Name, Value, SensorType, HarwareType, Group>
-                    process_sensor_data("Text" == types[1] ? types[2] : name.c_str(),
-                                        ("Text" == types[1] ? name : to_string(value)).c_str(),
-                                        types[1],
-                                        types[0],
-                                        types[2],
+                    process_sensor_data("Text" == sensor_type ? sensor_group : name.c_str(),
+                                        ("Text" == sensor_type ? name : to_string(value)).c_str(),
+                                        sensor_type,
+                                        hardware_type,
+                                        sensor_group,
                                         to_string(sensor_data.SensorIndex).c_str(),
                                         to_string(sensor_data.DataIndex).c_str());
                 }
@@ -154,41 +143,44 @@ namespace argus_monitor
                 const auto& sensor_data = argus_monitor_data->SensorData[index];
                 const wstring label(sensor_data.Label);
                 const string name(label.begin(), label.end());
-                const auto& types = ParseTypes(sensor_data.SensorType, name);
+                const char* hardware_type;
+                const char* sensor_type;
+                const char* sensor_group;
+                ParseTypes(sensor_data.SensorType, name, hardware_type, sensor_type, sensor_group);
 
-                if (IsHardwareEnabled(types[0]) && "Text" != types[1])
+                if (IsHardwareEnabled(hardware_type) && "Text" != sensor_type)
                 {
-                    const auto& value = GetFloatValue(sensor_data.Value, types[1]);
-                    if (value >= 0 && ("Temperature" != types[1] || value > 0))
+                    const auto& value = GetFloatValue(sensor_data.Value, sensor_type);
+                    if (value >= 0 && ("Temperature" != sensor_type || value > 0))
                     {
                         const auto& sensor_index = sensor_data.SensorIndex;
                         const auto& data_index = sensor_data.DataIndex;
-                        if ("CPU" == types[0])
+                        if ("CPU" == hardware_type)
                         {
-                            if ("Temperature" == types[1] && "Temperature" == types[2])
+                            if ("Temperature" == sensor_type && "Temperature" == sensor_group)
                             {
                                 cpu_temps[sensor_index].push_back(value);
                             }
 
-                            if ("Multiplier" == types[1] && "Multiplier" == types[2])
+                            if ("Multiplier" == sensor_type && "Multiplier" == sensor_group)
                             {
                                 multipliers[sensor_index]
-                                    [CoreClockId(types[0],
-                                                   sensor_index,
-                                                   data_index)] = value;
+                                    [CoreClockId(hardware_type,
+                                                 sensor_index,
+                                                 data_index)] = value;
                             }
 
-                            if ("Frequency" == types[1] && "FSB" == types[2])
+                            if ("Frequency" == sensor_type && "FSB" == sensor_group)
                             {
                                 fsb_clocks[sensor_index] = value;
                             }
                         }
 
-                        update(SensorId(types[0],
-                                         types[1],
-                                         types[2],
-                                         sensor_index,
-                                         data_index).c_str(),
+                        update(SensorId(hardware_type,
+                                        sensor_type,
+                                        sensor_group,
+                                        sensor_index,
+                                        data_index).c_str(),
                                value);
                     }
                 }
@@ -232,9 +224,9 @@ namespace argus_monitor
                 {
                     if (!cpu_temp.second.empty())
                     {
-                        float min_temp = FLT_MAX;
-                        float max_temp = -FLT_MAX;
-                        float sum_temp = 0;
+                        float min_temp{ FLT_MAX };
+                        float max_temp{ -FLT_MAX };
+                        float sum_temp{ 0 };
                         for (const auto& temp : cpu_temp.second)
                         {
                             if (temp < min_temp) min_temp = temp;
@@ -250,30 +242,6 @@ namespace argus_monitor
                 }
             }
             return true;
-        }
-
-        // Set the given hardware type to enabled/disabled
-        void ArgusMonitorLink::SetHardwareEnabled(const string& type, const bool& enabled)
-        {
-            enabled_hardware[type] = enabled;
-        }
-
-        // Check whether the given hardware type is enabled
-        bool ArgusMonitorLink::IsHardwareEnabled(const string& type) const
-        {
-            try
-            {
-                return enabled_hardware.at(type);
-            }
-            catch (const out_of_range& _)
-            {
-                return false;
-            }
-        }
-
-        HANDLE ArgusMonitorLink::OpenArgusApiMutex()
-        {
-            return OpenMutexW(READ_CONTROL | MUTANT_QUERY_STATE | SYNCHRONIZE, FALSE, argus_monitor::data_api::kMutexName());
         }
     }
 }

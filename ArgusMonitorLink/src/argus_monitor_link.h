@@ -51,7 +51,7 @@ namespace argus_monitor
             bool                                             is_open             { false };
             HANDLE                                           file_mapping_handle { nullptr };
             HANDLE                                           mutex_handle        { nullptr };
-            const argus_monitor::data_api::ArgusMonitorData* argus_monitor_data  { nullptr };
+            const ArgusMonitorData*                          argus_monitor_data  { nullptr };
             uint32_t                                         last_cycle_counter  { 0 };
 
             map<const string, bool> enabled_hardware = {
@@ -66,7 +66,7 @@ namespace argus_monitor
                 {"ArgusMonitor", true}
             };
 
-            static HANDLE OpenArgusApiMutex();
+            static HANDLE OpenArgusApiMutex() { return OpenMutexW(READ_CONTROL | MUTANT_QUERY_STATE | SYNCHRONIZE, FALSE, kMutexName); }
         public:
             ArgusMonitorLink() = default;
 
@@ -78,11 +78,11 @@ namespace argus_monitor
             ~ArgusMonitorLink() { Close(); }
 
             int  Open();
-            bool IsOpen() const noexcept { return is_open; }
+            inline bool IsOpen() const noexcept { return is_open; }
             int  Close();
 
-            bool CheckArgusSignature() const { return 0x4D677241 == argus_monitor_data->Signature; }
-            int  GetTotalSensorCount() const { return argus_monitor_data->TotalSensorCount; }
+            inline bool CheckArgusSignature() const { return 0x4D677241 == argus_monitor_data->Signature; }
+            inline int  GetTotalSensorCount() const { return argus_monitor_data->TotalSensorCount; }
             void GetSensorData(void (process_sensor_data)(const char* sensor_name,
                                                           const char* sensor_value,
                                                           const char* sensor_type,
@@ -92,8 +92,11 @@ namespace argus_monitor
                                                           const char* data_index));
             bool UpdateSensorData(void (update)(const char* sensor_id, const float sensor_value));
 
-            void SetHardwareEnabled(const string& type, const bool& enabled);
-            bool IsHardwareEnabled(const string& type) const;
+            inline void SetHardwareEnabled(const string& type, const bool& enabled) { enabled_hardware[type] = enabled; }
+            inline bool IsHardwareEnabled(const string& type) const {
+                try { return enabled_hardware.at(type); }
+                catch (const out_of_range& _) { return false; }
+            }
         };
     }
 }
@@ -148,7 +151,6 @@ extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t)
 
 // Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
 // add it to an external collection
-// returns true if new data was available and false if no new data was available
 extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
                                                    void (process_sensor_data)(const char* sensor_name,
                                                                               const char* sensor_value,
@@ -161,6 +163,8 @@ extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
     t->GetSensorData(process_sensor_data);
 }
 
+// Update the non static sensors
+// returns true if new data was available and false if no new data was available
 extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t,
                                                       void (update)(const char* sensor_id, const float sensor_value))
 {
@@ -179,6 +183,7 @@ extern "C" _declspec(dllexport) bool IsHardwareEnabled(ArgusMonitorLink* t, cons
     return t->IsHardwareEnabled(type);
 }
 
+// Delete the given instance, needs to be called when the Link instance is discarded
 extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t)
 {
     delete t;

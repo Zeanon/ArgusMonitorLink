@@ -6,8 +6,7 @@ Copyright (C) 2025 Zeanon
 Original License from https://github.com/argotronic/argus_data_api still applies
 **/
 
-#ifndef ARGUS_MONITOR_DATA_MEMORY_API_H
-#define ARGUS_MONITOR_DATA_MEMORY_API_H
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
@@ -16,13 +15,12 @@ namespace argus_monitor
 {
     namespace data_api
     {
-
-        //    static constexpr wchar_t const* kMappingName{L"Global\\ARGUSMONITOR_DATA_INTERFACE"};
-        //    static constexpr wchar_t const* kMutexName{L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"};
-        //    static constexpr std::size_t    kMappingSize{1024U * 1024U};
-        inline wchar_t const* kMappingName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE"; }
-        inline wchar_t const* kMutexName()   { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
-        inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
+        static constexpr wchar_t const* kMappingName{ L"Global\\ARGUSMONITOR_DATA_INTERFACE" };
+        static constexpr wchar_t const* kMutexName  { L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX" };
+        static constexpr std::size_t    kMappingSize{ 1024U * 1024U };
+        //    inline wchar_t const* kMappingName() { return L"Global\\ARGUSMONITOR_DATA_INTERFACE"; }
+        //    inline wchar_t const* kMutexName()   { return L"Global\\ARGUSMONITOR_DATA_INTERFACE_MUTEX"; }
+        //    inline std::size_t    kMappingSize() { return static_cast<size_t>(1024U) * 1024U; }
 
         enum ARGUS_MONITOR_SENSOR_TYPE
         {
@@ -96,8 +94,5 @@ namespace argus_monitor
         };
 #pragma pack()
 
-
     }    // data_api
 }    // argus_monitor
-
-#endif    // ARGUS_MONITOR_DATA_MEMORY_API_H
