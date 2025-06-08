@@ -8,8 +8,11 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include "utility.h"
 
 // parse ARGUS_MONITOR_SENSOR_TYPE and name to usable values
-// return: <HardwareType, SensorType, SensorGroup>
-inline void ParseTypes(const ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const string& name, const char*& hardware_type_buf, const char*& sensor_type_buf, const char*& sensor_group_buf) {
+inline void ParseTypes(const ARGUS_MONITOR_SENSOR_TYPE& sensor_type,
+                       const string& name,
+                       const char*& hardware_type_buf,
+                       const char*& sensor_type_buf,
+                       const char*& sensor_group_buf) {
     switch (sensor_type)
     {
         case SENSOR_TYPE_CPU_TEMPERATURE:
@@ -46,8 +49,14 @@ inline void ParseTypes(const ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const strin
         case SENSOR_TYPE_GPU_TEMPERATURE:
             hardware_type_buf = "GPU";
             sensor_type_buf = "Temperature";
-            sensor_group_buf = "GPU";
-            if (name.contains("Memory")) sensor_group_buf = "Memory";
+            if (name.contains("Memory"))
+            {
+                sensor_group_buf = "Memory";
+            }
+            else
+            {
+                sensor_group_buf = "GPU";
+            }
             break;
         case SENSOR_TYPE_GPU_FAN_SPEED_PERCENT:
             hardware_type_buf = "GPU";
@@ -108,10 +117,19 @@ inline void ParseTypes(const ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const strin
 
         case SENSOR_TYPE_RAM_USAGE:
             hardware_type_buf = "RAM";
-            sensor_type_buf = "Percentage";
+            if (name.contains("Total"))
+            {
+                sensor_type_buf = "Total";
+            }
+            else if (name.contains("Used"))
+            {
+                sensor_type_buf = "Usage";
+            }
+            else
+            {
+                sensor_type_buf = "Percentage";
+            }
             sensor_group_buf = "RAM";
-            if (name.contains("Total")) sensor_type_buf = "Total";
-            if (name.contains("Used"))  sensor_type_buf = "Usage";
             break;
 
         case SENSOR_TYPE_DISK_TEMPERATURE:
@@ -165,15 +183,10 @@ inline void ParseTypes(const ARGUS_MONITOR_SENSOR_TYPE& sensor_type, const strin
 
 // get the properly parsed float value for the specified sensor type
 inline const float GetFloatValue(const float& value, const string& sensor_type) {
-    if (sensor_type == "Transfer") return (value * 1000000) / 131072; // MB => MiB, bytes => bits (1000/1024) * (1000/1024) * 8
-    if (sensor_type == "Frequency" || sensor_type == "Clock") return value * 1000000;
-    if (sensor_type == "Usage" || sensor_type == "Total") return (value * 1000000000) / 1024; // KB => KiB, B => MB (1000/1024) * 1_000_000
+    if ("Transfer" == sensor_type) return (value * 1000000) / 131072; // MB => MiB, bytes => bits (1000/1024) * (1000/1024) * 8
+    if ("Frequency" == sensor_type || "Clock" == sensor_type) return value * 1000000;
+    if ("Usage" == sensor_type || "Total" == sensor_type) return (value * 1000000000) / 1024; // KB => KiB, B => MB (1000/1024) * 1_000_000
     return value;
-}
-
-// create a unique ID for the given core clock
-inline const string CoreClockId(const string& hardware_type, const int& sensor_index, const int& data_index) {
-    return hardware_type + "_Frequency_Core_Clock_" + to_string(sensor_index) + "_" + to_string(data_index);
 }
 
 // create a unique ID for the given sensor

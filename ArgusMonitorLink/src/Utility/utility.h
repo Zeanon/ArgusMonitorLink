@@ -13,7 +13,6 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include <string>
 #include <vector>
 
-
 using namespace std;
 using namespace argus_monitor::data_api;
 

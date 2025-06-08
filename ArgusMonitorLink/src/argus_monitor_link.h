@@ -21,7 +21,6 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 #include <string>
 #include <vector>
 
-
 using namespace std;
 
 namespace argus_monitor
@@ -104,7 +103,7 @@ namespace argus_monitor
 using namespace argus_monitor::data_api;
 
 // Create an instance of ArgusMonitorLink
-extern "C" _declspec(dllexport) void* Instantiate()
+extern "C" _declspec(dllexport) void* Create()
 {
     return (void*) new ArgusMonitorLink();
 }
@@ -115,15 +114,15 @@ extern "C" _declspec(dllexport) void* Instantiate()
 //   1: could not open file mapping
 //  10: could not optain fileview
 // 100: could not open ArgusApiMutex
-extern "C" _declspec(dllexport) int Open(ArgusMonitorLink* t)
+extern "C" _declspec(dllexport) int Open(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    return t->Open();
+    return argus_monitor_link_ptr->Open();
 }
 
 // Check whether the connection is already open
-extern "C" _declspec(dllexport) bool IsOpen(ArgusMonitorLink* t)
+extern "C" _declspec(dllexport) bool IsOpen(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    return t->IsOpen();
+    return argus_monitor_link_ptr->IsOpen();
 }
 
 // Clean up the file handle and unmap the fileview
@@ -132,26 +131,26 @@ extern "C" _declspec(dllexport) bool IsOpen(ArgusMonitorLink* t)
 //  1: Could not unmap the fileview
 // 10: Could not close the handle
 // 11: Neither was possible
-extern "C" _declspec(dllexport) int Close(ArgusMonitorLink* t)
+extern "C" _declspec(dllexport) int Close(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    return t->Close();
+    return argus_monitor_link_ptr->Close();
 }
 
 // Check whether ArgusMonitor is active
-extern "C" _declspec(dllexport) bool CheckArgusSignature(ArgusMonitorLink* t)
+extern "C" _declspec(dllexport) bool CheckArgusSignature(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    return t->CheckArgusSignature();
+    return argus_monitor_link_ptr->CheckArgusSignature();
 }
 
 // Get the total amount of sensors provided by Argus Monitor
-extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* t)
+extern "C" _declspec(dllexport) int GetTotalSensorCount(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    return t->GetTotalSensorCount();
+    return argus_monitor_link_ptr->GetTotalSensorCount();
 }
 
 // Get the data from argus monitor and if its new, create arrays that hold the sensor data and then use the passed add method to
 // add it to an external collection
-extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
+extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* argus_monitor_link_ptr,
                                                    void (process_sensor_data)(const char* sensor_name,
                                                                               const char* sensor_value,
                                                                               const char* sensor_type,
@@ -160,31 +159,32 @@ extern "C" _declspec(dllexport) void GetSensorData(ArgusMonitorLink* t,
                                                                               const char* sensor_index,
                                                                               const char* data_index))
 {
-    t->GetSensorData(process_sensor_data);
+    argus_monitor_link_ptr->GetSensorData(process_sensor_data);
 }
 
 // Update the non static sensors
 // returns true if new data was available and false if no new data was available
-extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* t,
+extern "C" _declspec(dllexport) bool UpdateSensorData(ArgusMonitorLink* argus_monitor_link_ptr,
                                                       void (update)(const char* sensor_id, const float sensor_value))
 {
-    return t->UpdateSensorData(update);
+    return argus_monitor_link_ptr->UpdateSensorData(update);
 }
 
 // Set the given hardware type to enabled/disabled
-extern "C" _declspec(dllexport) void SetHardwareEnabled(ArgusMonitorLink* t, const char* type, const bool enabled)
+extern "C" _declspec(dllexport) void SetHardwareEnabled(ArgusMonitorLink* argus_monitor_link_ptr, const char* type, const bool enabled)
 {
-    t->SetHardwareEnabled(type, enabled);
+    argus_monitor_link_ptr->SetHardwareEnabled(type, enabled);
 }
 
 // Check whether the given hardware type is enabled
-extern "C" _declspec(dllexport) bool IsHardwareEnabled(ArgusMonitorLink* t, const char* type)
+extern "C" _declspec(dllexport) bool IsHardwareEnabled(ArgusMonitorLink* argus_monitor_link_ptr, const char* type)
 {
-    return t->IsHardwareEnabled(type);
+    return argus_monitor_link_ptr->IsHardwareEnabled(type);
 }
 
-// Delete the given instance, needs to be called when the Link instance is discarded
-extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* t)
+// Delete the given instance
+// This needs to be called to ensure proper memory cleanup
+extern "C" _declspec(dllexport) void Destroy(ArgusMonitorLink* argus_monitor_link_ptr)
 {
-    delete t;
+    delete argus_monitor_link_ptr;
 }

@@ -64,7 +64,7 @@ namespace argus_monitor
         {
             ARGUS_MONITOR_SENSOR_TYPE SensorType;               // sensor type, see: enum ARGUS_MONITOR_SENSOR_TYPE
             wchar_t                   Label[kMaxLenLabel];      // "user defined name, if available, source name otherwise
-            wchar_t                   UnitString[kMaxLenUnit];  // "�C, rpm, %, ..."
+            wchar_t                   UnitString[kMaxLenUnit];  // "°C, rpm, %, ..."
             double                    Value;                    // fan speed / fan control value / temperature / load / usage / etc.
             std::uint32_t             DataIndex;      // for sensor which can provide multiple different readings, Core ID on multi core systems
             std::uint32_t             SensorIndex;    // for Sensors with multiple instances (e.g. CPU, GPU) CPU/GPU index

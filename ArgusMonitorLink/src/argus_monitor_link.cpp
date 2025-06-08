@@ -8,7 +8,6 @@ Original License from https://github.com/argotronic/argus_data_api still applies
 
 #include "argus_monitor_link.h"
 
-
 namespace argus_monitor
 {
     namespace data_api
@@ -165,9 +164,12 @@ namespace argus_monitor
                             if ("Multiplier" == sensor_type && "Multiplier" == sensor_group)
                             {
                                 multipliers[sensor_index]
-                                    [CoreClockId(hardware_type,
-                                                 sensor_index,
-                                                 data_index)] = value;
+                                           [SensorId(hardware_type,
+                                                     "Frequency",
+                                                     "Core_Clock",
+                                                     sensor_index,
+                                                     data_index)]
+                                    = value;
                             }
 
                             if ("Frequency" == sensor_type && "FSB" == sensor_group)
