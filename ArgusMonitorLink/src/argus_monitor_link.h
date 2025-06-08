@@ -35,7 +35,8 @@ namespace argus_monitor
                 const HANDLE mutex_handle_;
 
             public:
-                explicit Lock(const HANDLE& mutex_handle) : mutex_handle_{ mutex_handle }
+                explicit Lock(const HANDLE& mutex_handle)
+                    : mutex_handle_{ mutex_handle }
                 {
                     WaitForSingleObject(mutex_handle_, INFINITE);
                 }
